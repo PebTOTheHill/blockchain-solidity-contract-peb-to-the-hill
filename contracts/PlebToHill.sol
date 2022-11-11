@@ -7,7 +7,9 @@ contract PlebToHill is Ownable {
         uint256 participantId;
         address walletAddress;
         uint256 invested_amount;
+        uint256 winnings;
         uint256 roundId;
+        uint256 time;
     }
 
     struct Round {
@@ -17,7 +19,7 @@ contract PlebToHill is Ownable {
     }
 
     mapping(uint256 => Round) public RoundData;
-    Round[] public rounds;
+    Round[] internal rounds;
     mapping(uint256 => Participant[]) public participants;
 
     event RoundCreated(uint256 roundId, uint256 startTime, uint256 endTime);
@@ -25,7 +27,8 @@ contract PlebToHill is Ownable {
         uint256 roundId,
         address walletAddress,
         uint256 invested_amount,
-        uint256 participantId
+        uint256 participantId,
+        uint256 time
     );
 
     function createRound() external onlyOwner {
@@ -43,7 +46,7 @@ contract PlebToHill is Ownable {
 
         RoundData[newRoundId] = Round({
             startTime: block.timestamp,
-            endTime: block.timestamp + 10800,
+            endTime: block.timestamp + 900,
             isLive: true
         });
 
@@ -58,6 +61,12 @@ contract PlebToHill is Ownable {
     function endRound(uint256 roundId) external onlyOwner {
         require(!isCurrentRoundLive(roundId), "Round is  live");
 
+        if (participants[roundId].length == 1) {
+            payable(participants[roundId][0].walletAddress).transfer(
+                2000000000000000000
+            );
+        }
+
         RoundData[roundId].isLive = false;
         rounds[roundId].isLive = false;
     }
@@ -68,10 +77,6 @@ contract PlebToHill is Ownable {
             msg.value == getValueForNextParticipant(roundId),
             "Incorrect invested amount"
         );
-        require(
-            !isUserAvailable(roundId, msg.sender),
-            "User already entered for the round"
-        );
 
         uint256 newParticipantId = participants[roundId].length;
 
@@ -80,26 +85,30 @@ contract PlebToHill is Ownable {
                 participantId: newParticipantId,
                 walletAddress: msg.sender,
                 invested_amount: msg.value,
-                roundId: roundId
+                roundId: roundId,
+                winnings: 0,
+                time: block.timestamp
             })
         );
-        emit ParticipantAdded(roundId, msg.sender, msg.value, newParticipantId);
-    }
 
-    function isUserAvailable(uint256 roundId, address wallet)
-        internal
-        view
-        returns (bool)
-    {
-        bool isAvailable;
-        for (uint256 i = 0; i < participants[roundId].length; i++) {
-            if (participants[roundId][i].walletAddress == wallet) {
-                isAvailable = true;
-                break;
-            }
+        if (newParticipantId > 0) {
+            uint256 serviceFee = ((participants[roundId][newParticipantId - 1]
+                .invested_amount * 2) * 5) / 100;
+            uint256 prizeAmount = (participants[roundId][newParticipantId - 1]
+                .invested_amount * 2) - serviceFee;
+
+            payable(participants[roundId][newParticipantId - 1].walletAddress)
+                .transfer(prizeAmount);
+            participants[roundId][newParticipantId - 1].winnings += prizeAmount;
         }
 
-        return isAvailable;
+        emit ParticipantAdded(
+            roundId,
+            msg.sender,
+            msg.value,
+            newParticipantId,
+            block.timestamp
+        );
     }
 
     function getValueForNextParticipant(uint256 roundId)
@@ -107,8 +116,28 @@ contract PlebToHill is Ownable {
         view
         returns (uint256)
     {
+        require(isCurrentRoundLive(roundId), "Round is not live");
         uint256 totalParticipants = participants[roundId].length;
         return ((2**totalParticipants) * 1000000000000000000);
+    }
+
+    function getCurrentLiveRound()
+        public
+        view
+        returns (
+            uint256 roundId,
+            uint256 startTime,
+            uint256 endTime,
+            bool isLive
+        )
+    {
+        Round memory round = RoundData[rounds.length - 1];
+        return (
+            rounds.length - 1,
+            round.startTime,
+            round.endTime,
+            round.isLive
+        );
     }
 
     function IsPreviousRoundFinished() internal view returns (bool) {
@@ -121,6 +150,18 @@ contract PlebToHill is Ownable {
         }
 
         return finished;
+    }
+
+    function getAllParticipantOfRound(uint256 roundId)
+        external
+        view
+        returns (Participant[] memory)
+    {
+        return participants[roundId];
+    }
+
+    function getAllRounds() external view returns (Round[] memory) {
+        return rounds;
     }
 
     function isCurrentRoundLive(uint256 roundId) internal view returns (bool) {
