@@ -21,6 +21,7 @@ contract PlebToHill is Ownable {
     mapping(uint256 => Round) public RoundData;
     Round[] internal rounds;
     mapping(uint256 => Participant[]) public participants;
+    uint256 public serviceFee;
 
     event RoundCreated(uint256 roundId, uint256 startTime, uint256 endTime);
     event ParticipantAdded(
@@ -30,7 +31,18 @@ contract PlebToHill is Ownable {
         uint256 participantId,
         uint256 time
     );
+    event WinningTransfered(
+        uint256 roundId,
+        address walletAddress,
+        uint256 invested_amount,
+        uint256 participantId,
+        uint256 winnings
+    );
+    event RoundFinished(uint256 roundId);
 
+    /**
+     * @notice Create new Round.Only owner can create a new round with 1 tPLS as contract balance.
+     */
     function createRound() external onlyOwner {
         require(
             address(this).balance >= 1000000000000000000,
@@ -46,7 +58,7 @@ contract PlebToHill is Ownable {
 
         RoundData[newRoundId] = Round({
             startTime: block.timestamp,
-            endTime: block.timestamp + 900,
+            endTime: block.timestamp + 300,
             isLive: true
         });
 
@@ -58,19 +70,40 @@ contract PlebToHill is Ownable {
         );
     }
 
+    /**
+    @notice End a live round once the round duration completed 
+    @param roundId,Id of round to be end.
+     */
     function endRound(uint256 roundId) external onlyOwner {
         require(!isCurrentRoundLive(roundId), "Round is  live");
-
-        if (participants[roundId].length == 1) {
-            payable(participants[roundId][0].walletAddress).transfer(
-                2000000000000000000
-            );
-        }
-
+        require(RoundData[roundId].isLive, "Round already finished");
         RoundData[roundId].isLive = false;
         rounds[roundId].isLive = false;
+
+        if (participants[roundId].length == 1) {
+            uint256 serviceFee = ((participants[roundId][0].invested_amount *
+                2) * 5) / 100;
+            uint256 prizeAmount = (participants[roundId][0].invested_amount *
+                2) - serviceFee;
+            participants[roundId][0].winnings = prizeAmount;
+            payable(participants[roundId][0].walletAddress).transfer(
+                prizeAmount
+            );
+            emit WinningTransfered(
+                roundId,
+                participants[roundId][0].walletAddress,
+                participants[roundId][0].invested_amount,
+                participants[roundId][0].participantId,
+                prizeAmount
+            );
+        }
+        emit RoundFinished(roundId);
     }
 
+    /**
+    @notice Add a player to a live round. 
+    @param roundId,Id of round to be partcipate.
+     */
     function addParticipant(uint256 roundId) external payable {
         require(isCurrentRoundLive(roundId), "Round is not live");
         require(
@@ -91,15 +124,25 @@ contract PlebToHill is Ownable {
             })
         );
 
-        if (newParticipantId > 0) {
-            uint256 serviceFee = ((participants[roundId][newParticipantId - 1]
-                .invested_amount * 2) * 5) / 100;
+        if (newParticipantId != 0) {
+            serviceFee =
+                ((participants[roundId][newParticipantId - 1].invested_amount *
+                    2) * 5) /
+                100;
             uint256 prizeAmount = (participants[roundId][newParticipantId - 1]
                 .invested_amount * 2) - serviceFee;
+            participants[roundId][newParticipantId - 1].winnings = prizeAmount;
 
             payable(participants[roundId][newParticipantId - 1].walletAddress)
                 .transfer(prizeAmount);
-            participants[roundId][newParticipantId - 1].winnings += prizeAmount;
+
+            emit WinningTransfered(
+                roundId,
+                participants[roundId][newParticipantId - 1].walletAddress,
+                participants[roundId][newParticipantId - 1].invested_amount,
+                participants[roundId][newParticipantId - 1].participantId,
+                prizeAmount
+            );
         }
 
         emit ParticipantAdded(
@@ -111,6 +154,32 @@ contract PlebToHill is Ownable {
         );
     }
 
+    /**
+    @notice Get all participant's detail in a round.
+    @param roundId,Round Id.
+    @return Participant array
+     */
+    function getAllParticipantOfRound(uint256 roundId)
+        external
+        view
+        returns (Participant[] memory)
+    {
+        return participants[roundId];
+    }
+
+    /**
+    @notice Get all the rounds data
+    @return Round array
+     */
+    function getAllRounds() external view returns (Round[] memory) {
+        return rounds;
+    }
+
+    /**
+    @notice Get the value of tPLS to be invested by the next player on a round.
+    @param roundId,Round Id
+    @return uint value in tPLS
+     */
     function getValueForNextParticipant(uint256 roundId)
         public
         view
@@ -121,6 +190,10 @@ contract PlebToHill is Ownable {
         return ((2**totalParticipants) * 1000000000000000000);
     }
 
+    /**
+    @notice Get current live round details 
+    @return roundId,startTime,endTime,isLive
+     */
     function getCurrentLiveRound()
         public
         view
@@ -140,6 +213,10 @@ contract PlebToHill is Ownable {
         );
     }
 
+    /**
+    @notice Check if the previous round is finished.
+    @return finished
+     */
     function IsPreviousRoundFinished() internal view returns (bool) {
         bool finished;
         if (
@@ -152,18 +229,10 @@ contract PlebToHill is Ownable {
         return finished;
     }
 
-    function getAllParticipantOfRound(uint256 roundId)
-        external
-        view
-        returns (Participant[] memory)
-    {
-        return participants[roundId];
-    }
-
-    function getAllRounds() external view returns (Round[] memory) {
-        return rounds;
-    }
-
+    /**
+    @notice Check if the current round is live.
+    @return isLive
+     */
     function isCurrentRoundLive(uint256 roundId) internal view returns (bool) {
         bool isLive;
         if (
