@@ -30,4 +30,8 @@ module.exports = {
       testnet: "0",
     },
   },
+  dodoc: {
+    runOnCompile: false,
+    debugMode: true,
+  },
 };

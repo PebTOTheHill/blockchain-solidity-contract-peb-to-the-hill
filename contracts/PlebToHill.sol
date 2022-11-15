@@ -18,10 +18,9 @@ contract PlebToHill is Ownable {
         bool isLive;
     }
 
-    mapping(uint256 => Round) public RoundData;
-    Round[] internal rounds;
-    mapping(uint256 => Participant[]) public participants;
-    uint256 public serviceFee;
+    mapping(uint256 => Round) private RoundData;
+    Round[] private rounds;
+    mapping(uint256 => Participant[]) private participants;
 
     event RoundCreated(uint256 roundId, uint256 startTime, uint256 endTime);
     event ParticipantAdded(
@@ -125,10 +124,8 @@ contract PlebToHill is Ownable {
         );
 
         if (newParticipantId != 0) {
-            serviceFee =
-                ((participants[roundId][newParticipantId - 1].invested_amount *
-                    2) * 5) /
-                100;
+            uint256 serviceFee = ((participants[roundId][newParticipantId - 1]
+                .invested_amount * 2) * 5) / 100;
             uint256 prizeAmount = (participants[roundId][newParticipantId - 1]
                 .invested_amount * 2) - serviceFee;
             participants[roundId][newParticipantId - 1].winnings = prizeAmount;
@@ -155,6 +152,31 @@ contract PlebToHill is Ownable {
     }
 
     /**
+    @notice Get the loser participant data for a round.
+    @param roundId,Round Id.
+    @return id participant id.
+    @return wallet participant wallet
+     */
+
+    function getLoserData(uint256 roundId)
+        external
+        view
+        returns (
+            uint256 id,
+            address wallet,
+            uint256 amount_lose
+        )
+    {
+        require(participants[roundId].length > 1, "No loser in this round.");
+        Participant memory participant = participants[roundId][
+            participants[roundId].length - 1
+        ];
+        id = participant.participantId;
+        wallet = participant.walletAddress;
+        amount_lose = participant.invested_amount;
+    }
+
+    /**
     @notice Get all participant's detail in a round.
     @param roundId,Round Id.
     @return Participant array
@@ -165,6 +187,20 @@ contract PlebToHill is Ownable {
         returns (Participant[] memory)
     {
         return participants[roundId];
+    }
+
+    /**
+    @notice Get the details of a single round.
+    @param roundId, Round id
+    @return Round
+     */
+
+    function getRoundData(uint256 roundId)
+        external
+        view
+        returns (Round memory)
+    {
+        return RoundData[roundId];
     }
 
     /**
@@ -192,7 +228,7 @@ contract PlebToHill is Ownable {
 
     /**
     @notice Get current live round details 
-    @return roundId,startTime,endTime,isLive
+    @return roundId
      */
     function getCurrentLiveRound()
         public
