@@ -156,6 +156,7 @@ contract PlebToHill is Ownable {
     @param roundId,Round Id.
     @return id participant id.
     @return wallet participant wallet
+    @return amount_lose amount lose.
      */
 
     function getLoserData(uint256 roundId)
@@ -228,7 +229,10 @@ contract PlebToHill is Ownable {
 
     /**
     @notice Get current live round details 
-    @return roundId
+    @return roundId round id
+    @return startTime round start time
+    @return endTime round end time
+    @return isLive check if round is live
      */
     function getCurrentLiveRound()
         public
