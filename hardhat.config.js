@@ -4,6 +4,7 @@ require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-solhint");
 require("@primitivefi/hardhat-dodoc");
+require("solidity-coverage");
 const {
   chainConfig,
 } = require("@nomiclabs/hardhat-etherscan/dist/src/ChainConfig");
