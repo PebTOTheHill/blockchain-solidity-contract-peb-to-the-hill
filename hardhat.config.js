@@ -2,6 +2,8 @@
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
+require("@nomiclabs/hardhat-solhint");
+require("@primitivefi/hardhat-dodoc");
 const {
   chainConfig,
 } = require("@nomiclabs/hardhat-etherscan/dist/src/ChainConfig");
@@ -27,5 +29,9 @@ module.exports = {
     apiKey: {
       testnet: "0",
     },
+  },
+  dodoc: {
+    runOnCompile: false,
+    debugMode: true,
   },
 };
