@@ -13,11 +13,12 @@ contract PlebToHill is Ownable {
     }
 
     struct Round {
+        uint256 roundId;
         uint256 startTime;
         uint256 endTime;
         bool isLive;
     }
-
+    address public poth_address;
     mapping(uint256 => Round) private RoundData;
     Round[] private rounds;
     mapping(uint256 => Participant[]) private participants;
@@ -44,7 +45,7 @@ contract PlebToHill is Ownable {
      */
     function createRound() external onlyOwner {
         require(
-            address(this).balance >= 1000000000000000000,
+            address(this).balance >= 1e18,
             "Minimum contract balance should be 1 tPLS"
         );
         uint256 newRoundId = rounds.length;
@@ -56,8 +57,9 @@ contract PlebToHill is Ownable {
             );
 
         RoundData[newRoundId] = Round({
+            roundId: newRoundId,
             startTime: block.timestamp,
-            endTime: block.timestamp + 300,
+            endTime: block.timestamp + 600,
             isLive: true
         });
 
@@ -88,6 +90,7 @@ contract PlebToHill is Ownable {
             payable(participants[roundId][0].walletAddress).transfer(
                 prizeAmount
             );
+            payable(poth_address).transfer(serviceFee);
             emit WinningTransfered(
                 roundId,
                 participants[roundId][0].walletAddress,
@@ -110,7 +113,7 @@ contract PlebToHill is Ownable {
             "Incorrect invested amount"
         );
 
-        uint256 newParticipantId = participants[roundId].length;
+        uint256 newParticipantId = participants[roundId].length + 1;
 
         participants[roundId].push(
             Participant({
@@ -123,21 +126,21 @@ contract PlebToHill is Ownable {
             })
         );
 
-        if (newParticipantId != 0) {
-            uint256 serviceFee = ((participants[roundId][newParticipantId - 1]
+        if (newParticipantId != 1) {
+            uint256 serviceFee = ((participants[roundId][newParticipantId - 2]
                 .invested_amount * 2) * 5) / 100;
-            uint256 prizeAmount = (participants[roundId][newParticipantId - 1]
+            uint256 prizeAmount = (participants[roundId][newParticipantId - 2]
                 .invested_amount * 2) - serviceFee;
-            participants[roundId][newParticipantId - 1].winnings = prizeAmount;
+            participants[roundId][newParticipantId - 2].winnings = prizeAmount;
 
-            payable(participants[roundId][newParticipantId - 1].walletAddress)
+            payable(participants[roundId][newParticipantId - 2].walletAddress)
                 .transfer(prizeAmount);
-
+            payable(poth_address).transfer(serviceFee);
             emit WinningTransfered(
                 roundId,
-                participants[roundId][newParticipantId - 1].walletAddress,
-                participants[roundId][newParticipantId - 1].invested_amount,
-                participants[roundId][newParticipantId - 1].participantId,
+                participants[roundId][newParticipantId - 2].walletAddress,
+                participants[roundId][newParticipantId - 2].invested_amount,
+                participants[roundId][newParticipantId - 2].participantId,
                 prizeAmount
             );
         }
@@ -152,13 +155,22 @@ contract PlebToHill is Ownable {
     }
 
     /**
+    @notice Set POTH(Pleb of the Hill) wallet address
+    @param _pothwallet, new wallet address
+     */
+
+    function setPothWallet(address _pothwallet) external onlyOwner {
+        require(_pothwallet != address(0), "Zero address not allowed");
+        poth_address = _pothwallet;
+    }
+
+    /**
     @notice Get the loser participant data for a round.
     @param roundId,Round Id.
     @return id participant id.
-    @return wallet participant wallet
+    @return wallet participant wallet.
     @return amount_lose amount lose.
      */
-
     function getLoserData(uint256 roundId)
         external
         view
@@ -168,13 +180,18 @@ contract PlebToHill is Ownable {
             uint256 amount_lose
         )
     {
-        require(participants[roundId].length > 1, "No loser in this round.");
-        Participant memory participant = participants[roundId][
-            participants[roundId].length - 1
-        ];
-        id = participant.participantId;
-        wallet = participant.walletAddress;
-        amount_lose = participant.invested_amount;
+        if (participants[roundId].length == 1) {
+            id = 0;
+            wallet = address(0);
+            amount_lose = 0;
+        } else {
+            Participant memory participant = participants[roundId][
+                participants[roundId].length - 1
+            ];
+            id = participant.participantId;
+            wallet = participant.walletAddress;
+            amount_lose = participant.invested_amount;
+        }
     }
 
     /**
@@ -190,12 +207,6 @@ contract PlebToHill is Ownable {
         return participants[roundId];
     }
 
-    /**
-    @notice Get the details of a single round.
-    @param roundId, Round id
-    @return Round
-     */
-
     function getRoundData(uint256 roundId)
         external
         view
@@ -205,11 +216,24 @@ contract PlebToHill is Ownable {
     }
 
     /**
-    @notice Get all the rounds data
+    @notice Get all the rounds data from start to end indices
+    @param start,start index
+    @param end, end index
     @return Round array
      */
-    function getAllRounds() external view returns (Round[] memory) {
-        return rounds;
+    function getAllRounds(uint256 start, uint256 end)
+        external
+        view
+        returns (Round[] memory)
+    {
+        require(end < rounds.length, "Invalid range");
+        Round[] memory roundArray = new Round[]((end - start) + 1);
+        for (uint256 i = 0; i <= (end - start); i++) {
+            Round memory round = rounds[i + start];
+            roundArray[i] = round;
+        }
+
+        return roundArray;
     }
 
     /**
@@ -224,15 +248,12 @@ contract PlebToHill is Ownable {
     {
         require(isCurrentRoundLive(roundId), "Round is not live");
         uint256 totalParticipants = participants[roundId].length;
-        return ((2**totalParticipants) * 1000000000000000000);
+        return ((2**totalParticipants) * 1e18);
     }
 
     /**
     @notice Get current live round details 
-    @return roundId round id
-    @return startTime round start time
-    @return endTime round end time
-    @return isLive check if round is live
+    @return roundId
      */
     function getCurrentLiveRound()
         public

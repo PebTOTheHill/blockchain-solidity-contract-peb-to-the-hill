@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\contracts\\PlebToHill.sol": {
-      "lastModificationDate": 1668599031308,
-      "contentHash": "60f63178cbbde4b8a9fcad9f1cbd1474",
+      "lastModificationDate": 1668765637938,
+      "contentHash": "06aab620d123cba87c687155ffb5a8c6",
       "sourceName": "contracts/PlebToHill.sol",
       "solcConfig": {
         "version": "0.8.17",
@@ -21,17 +21,12 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
-                "userdoc",
-                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -65,17 +60,12 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
-                "userdoc",
-                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -109,17 +99,12 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
-                "userdoc",
-                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },

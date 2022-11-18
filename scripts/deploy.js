@@ -14,4 +14,6 @@ main()
     process.exit(1);
   });
 
-//Contract deployed to: 0xb1203Fb8f8eC6fBd1335d6Fe732060965c26b96e
+//Contract deployed to: 0x98E692d528Cf1482F7AaD53Ef36E96aC8C11C0fc
+
+//https://scan.v2b.testnet.pulsechain.com/address/0x98E692d528Cf1482F7AaD53Ef36E96aC8C11C0fc#code

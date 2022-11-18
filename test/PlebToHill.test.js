@@ -52,7 +52,7 @@ describe("PlebToHill", () => {
     });
 
     it("Should create round when previous round duration is over and end round is called", async () => {
-      await network.provider.send("evm_increaseTime", [500]);
+      await network.provider.send("evm_increaseTime", [1000]);
       await network.provider.send("evm_mine");
       await _contract.connect(addr1).endRound(0);
       await _contract.connect(addr1).createRound();
@@ -86,6 +86,60 @@ describe("PlebToHill", () => {
       expect(
         (await _contract.getAllParticipantOfRound(0))[0].roundId
       ).to.be.equal(0);
+    });
+
+    it("New participant should pay correct amount to join", async () => {
+      await _contract.connect(addr2).addParticipant(0, {
+        value: ethers.utils.parseEther("1.0"),
+      });
+
+      await expect(
+        _contract.connect(addr2).addParticipant(0, {
+          value: ethers.utils.parseEther("3.0"),
+        })
+      ).to.be.revertedWith("Incorrect invested amount");
+    });
+
+    it("Should pay to previous participant when a new one join ", async () => {
+      const previousBalance = ethers.utils.formatEther(
+        await ethers.provider.getBalance(addr2.address)
+      );
+
+      await _contract.connect(addr2).addParticipant(0, {
+        value: ethers.utils.parseEther("1.0"),
+      });
+
+      await _contract.connect(addr1).addParticipant(0, {
+        value: ethers.utils.parseEther("2.0"),
+      });
+
+      const latestBalance = ethers.utils.formatEther(
+        await ethers.provider.getBalance(addr2.address)
+      );
+      expect(parseInt(latestBalance)).to.be.greaterThan(
+        parseInt(previousBalance)
+      );
+    });
+
+    it("Should pay twice amount to the only participant of a round after round end", async () => {
+      const previousBalance = ethers.utils.formatEther(
+        await ethers.provider.getBalance(addr2.address)
+      );
+
+      await _contract.connect(addr2).addParticipant(0, {
+        value: ethers.utils.parseEther("1.0"),
+      });
+
+      await network.provider.send("evm_increaseTime", [1000]);
+      await network.provider.send("evm_mine");
+      await _contract.connect(addr1).endRound(0);
+
+      const latestBalance = ethers.utils.formatEther(
+        await ethers.provider.getBalance(addr2.address)
+      );
+      expect(parseInt(latestBalance)).to.be.greaterThan(
+        parseInt(previousBalance)
+      );
     });
   });
 });

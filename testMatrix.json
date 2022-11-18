@@ -1,0 +1,665 @@
+{
+ "contracts\\PlebToHill.sol": {
+  "47": [
+   {
+    "title": "Should not create a round when contract balance is less than 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "51": [
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "53": [
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "54": [
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "59": [
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "66": [
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "67": [
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "79": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "80": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "81": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "82": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "84": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "85": [
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "87": [
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "89": [
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "90": [
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "93": [
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "94": [
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "102": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "110": [
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "111": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "116": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "118": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "129": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "130": [
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "132": [
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "134": [
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "136": [
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "138": [
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "139": [
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "148": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "163": [],
+  "164": [],
+  "183": [],
+  "184": [],
+  "187": [],
+  "188": [],
+  "189": [],
+  "202": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "210": [
+   {
+    "title": "Should create a round when contract balance is greater then 1 tPLS",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "224": [],
+  "225": [],
+  "226": [],
+  "227": [],
+  "228": [],
+  "231": [],
+  "244": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "245": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "246": [
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "263": [],
+  "264": [],
+  "277": [
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "278": [
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "282": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "285": [
+   {
+    "title": "Should not create a round when previous round already live",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "293": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "294": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ],
+  "299": [
+   {
+    "title": "Should create round when previous round duration is over and end round is called",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should not  add a particpant to a  non-live round ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should add a participant to the live round",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "New participant should pay correct amount to join",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay to previous participant when a new one join ",
+    "file": "test\\PlebToHill.test.js"
+   },
+   {
+    "title": "Should pay twice amount to the only participant of a round after round end",
+    "file": "test\\PlebToHill.test.js"
+   }
+  ]
+ }
+}
