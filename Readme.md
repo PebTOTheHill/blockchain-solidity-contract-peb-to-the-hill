@@ -29,3 +29,20 @@ This the main contract and has following methods.
 | addParticipant | It is used to add participant to a live round and pay winnings to the previous participant whenever a new participant joins               | roundId      |
 | setPothWallet  | It is used to set the Pleb of the hill wallet address to collect the service fee                                                          | \_pothwallet |
 | getLoserData   | It is used to get the loser participant data once round is over                                                                           | roundId      |
+
+### List of Libraries/Framework used:
+
+- Mocha
+- Chai
+
+### Run Test Cases:
+
+> npx hardhat test
+
+### Run coverage report
+
+> npx hardhat coverge
+
+### Generate functional doc
+
+> npx hardhat dodoc

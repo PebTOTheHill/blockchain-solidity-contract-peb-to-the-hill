@@ -180,7 +180,7 @@ contract PlebToHill is Ownable {
             uint256 amount_lose
         )
     {
-        if (participants[roundId].length == 1) {
+        if (participants[roundId].length == 1 || participants[roundId].length == 0) {
             id = 0;
             wallet = address(0);
             amount_lose = 0;
