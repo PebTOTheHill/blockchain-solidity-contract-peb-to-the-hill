@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: NONE
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract PlebToHill is Ownable {
+contract PlebToHill is Ownable, ReentrancyGuard {
     struct Participant {
         uint256 participantId;
         address walletAddress;
@@ -48,7 +49,7 @@ contract PlebToHill is Ownable {
             address(this).balance >= 1e18,
             "Minimum contract balance should be 1 tPLS"
         );
-        uint256 newRoundId = rounds.length;
+        uint256 newRoundId = rounds.length + 1;
 
         if (rounds.length > 0)
             require(
@@ -79,7 +80,7 @@ contract PlebToHill is Ownable {
         require(!isCurrentRoundLive(roundId), "Round is  live");
         require(RoundData[roundId].isLive, "Round already finished");
         RoundData[roundId].isLive = false;
-        rounds[roundId].isLive = false;
+        rounds[roundId - 1].isLive = false;
 
         if (participants[roundId].length == 1) {
             uint256 serviceFee = ((participants[roundId][0].invested_amount *
@@ -106,7 +107,7 @@ contract PlebToHill is Ownable {
     @notice Add a player to a live round. 
     @param roundId,Id of round to be partcipate.
      */
-    function addParticipant(uint256 roundId) external payable {
+    function addParticipant(uint256 roundId) external payable nonReentrant {
         require(isCurrentRoundLive(roundId), "Round is not live");
         require(
             msg.value == getValueForNextParticipant(roundId),
@@ -171,16 +172,13 @@ contract PlebToHill is Ownable {
     @return wallet participant wallet.
     @return amount_lose amount lose.
      */
-    function getLoserData(uint256 roundId)
-        external
-        view
-        returns (
-            uint256 id,
-            address wallet,
-            uint256 amount_lose
-        )
-    {
-        if (participants[roundId].length == 1 || participants[roundId].length == 0) {
+    function getLoserData(
+        uint256 roundId
+    ) external view returns (uint256 id, address wallet, uint256 amount_lose) {
+        if (
+            participants[roundId].length == 1 ||
+            participants[roundId].length == 0
+        ) {
             id = 0;
             wallet = address(0);
             amount_lose = 0;
@@ -199,19 +197,15 @@ contract PlebToHill is Ownable {
     @param roundId,Round Id.
     @return Participant array
      */
-    function getAllParticipantOfRound(uint256 roundId)
-        external
-        view
-        returns (Participant[] memory)
-    {
+    function getAllParticipantOfRound(
+        uint256 roundId
+    ) external view returns (Participant[] memory) {
         return participants[roundId];
     }
 
-    function getRoundData(uint256 roundId)
-        external
-        view
-        returns (Round memory)
-    {
+    function getRoundData(
+        uint256 roundId
+    ) external view returns (Round memory) {
         return RoundData[roundId];
     }
 
@@ -221,11 +215,10 @@ contract PlebToHill is Ownable {
     @param end, end index
     @return Round array
      */
-    function getAllRounds(uint256 start, uint256 end)
-        external
-        view
-        returns (Round[] memory)
-    {
+    function getAllRounds(
+        uint256 start,
+        uint256 end
+    ) external view returns (Round[] memory) {
         require(end < rounds.length, "Invalid range");
         Round[] memory roundArray = new Round[]((end - start) + 1);
         for (uint256 i = 0; i <= (end - start); i++) {
@@ -241,14 +234,16 @@ contract PlebToHill is Ownable {
     @param roundId,Round Id
     @return uint value in tPLS
      */
-    function getValueForNextParticipant(uint256 roundId)
-        public
-        view
-        returns (uint256)
-    {
-        require(isCurrentRoundLive(roundId), "Round is not live");
-        uint256 totalParticipants = participants[roundId].length;
-        return ((2**totalParticipants) * 1e18);
+    function getValueForNextParticipant(
+        uint256 roundId
+    ) public view returns (uint256) {
+        if (isCurrentRoundLive(roundId)) {
+            uint256 totalParticipants = participants[roundId].length;
+
+            return ((2 ** totalParticipants) * 1e18);
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -265,13 +260,17 @@ contract PlebToHill is Ownable {
             bool isLive
         )
     {
-        Round memory round = RoundData[rounds.length - 1];
-        return (
-            rounds.length - 1,
-            round.startTime,
-            round.endTime,
-            round.isLive
-        );
+        if (rounds.length > 0) {
+            Round memory round = RoundData[rounds.length];
+            return (
+                rounds.length,
+                round.startTime,
+                round.endTime,
+                round.isLive
+            );
+        } else {
+            return (0, 0, 0, false);
+        }
     }
 
     /**
