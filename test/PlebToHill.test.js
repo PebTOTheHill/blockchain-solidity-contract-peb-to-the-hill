@@ -8,6 +8,7 @@ describe("PlebToHill", () => {
     const contract = await ethers.getContractFactory("PlebToHill", addr1);
     _contract = await contract.deploy();
     await _contract.deployed();
+    console.log("");
   });
 
   it("Should not create a round when contract balance is less than 1 tPLS", async () => {
