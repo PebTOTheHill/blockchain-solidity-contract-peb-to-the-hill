@@ -40,6 +40,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         uint256 winnings
     );
     event RoundFinished(uint256 roundId);
+    event TimeReset(uint256 roundId, uint256 endTime);
 
     /**
      * @notice Create new Round.Only owner can create a new round with 1 tPLS as contract balance.
@@ -127,6 +128,13 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             })
         );
 
+        if (getRemainingTime(roundId) <= 120 && getRemainingTime(roundId) > 0) {
+            uint256 newTime = RoundData[roundId].endTime + 600;
+            RoundData[roundId].endTime = newTime;
+            rounds[roundId - 1].endTime = newTime;
+            emit TimeReset(roundId, newTime);
+        }
+
         if (newParticipantId != 1) {
             uint256 serviceFee = ((participants[roundId][newParticipantId - 2]
                 .invested_amount * 2) * 5) / 100;
@@ -203,9 +211,11 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         return participants[roundId];
     }
 
-    function getRoundData(
-        uint256 roundId
-    ) external view returns (Round memory) {
+    /**
+     @notice Get Round data of a round
+     @return round
+     */
+    function getRoundData(uint256 roundId) public view returns (Round memory) {
         return RoundData[roundId];
     }
 
@@ -301,6 +311,20 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         ) isLive = true;
 
         return isLive;
+    }
+
+    /**
+     @notice Get the remaining time of a round
+     @param roundId,Round Id
+     @return remaining time
+     */
+
+    function getRemainingTime(uint256 roundId) public view returns (uint256) {
+        Round memory roundData = getRoundData(roundId);
+
+        if (block.timestamp < roundData.endTime)
+            return roundData.endTime - block.timestamp;
+        else return 0;
     }
 
     receive() external payable {}
