@@ -4,6 +4,8 @@ require("dotenv").config();
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-solhint");
 require("@primitivefi/hardhat-dodoc");
+require("hardhat-contract-sizer");
+require("hardhat-gas-reporter");
 require("solidity-coverage");
 const {
   chainConfig,
@@ -34,5 +36,11 @@ module.exports = {
   dodoc: {
     runOnCompile: false,
     debugMode: true,
+  },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: true,
   },
 };

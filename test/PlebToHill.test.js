@@ -329,4 +329,29 @@ describe("PlebToHill", () => {
   it("Should return zero for a non-live round", async () => {
     expect(await _contract.getValueForNextParticipant(2)).to.be.equal(0);
   });
+
+  describe("Timer reset", () => {
+    beforeEach(async () => {
+      await addr1.sendTransaction({
+        to: _contract.address,
+        value: ethers.utils.parseEther("1.0"),
+      });
+      await _contract.connect(addr1).createRound();
+    });
+    it("Should add extra time if a user joins with ", async () => {
+      const initialTime = (await _contract.getRoundData(1)).endTime;
+
+      console.log(await _contract.getRemainingTime(1));
+
+      await network.provider.send("evm_increaseTime", [500]);
+      await network.provider.send("evm_mine");
+      await _contract.connect(addr2).addParticipant(1, {
+        value: ethers.utils.parseEther("1.0"),
+      });
+      console.log(await _contract.getRemainingTime(1));
+      const finalTime = (await _contract.getRoundData(1)).endTime;
+      console.log("initial", initialTime);
+      console.log("final", finalTime);
+    });
+  });
 });

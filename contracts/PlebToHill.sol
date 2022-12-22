@@ -4,6 +4,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract PlebToHill is Ownable, ReentrancyGuard {
+    uint256 public roundDuration;
+    uint256 public extraDuration;
+    uint256 public thresholdTime;
+
     struct Participant {
         uint256 participantId;
         address walletAddress;
@@ -47,6 +51,10 @@ contract PlebToHill is Ownable, ReentrancyGuard {
      */
     function createRound() external onlyOwner {
         require(
+            (roundDuration > 0 && extraDuration > 0 && thresholdTime > 0),
+            "Round duration or extra duration  are not set."
+        );
+        require(
             address(this).balance >= 1e18,
             "Minimum contract balance should be 1 tPLS"
         );
@@ -61,7 +69,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         RoundData[newRoundId] = Round({
             roundId: newRoundId,
             startTime: block.timestamp,
-            endTime: block.timestamp + 600,
+            endTime: block.timestamp + roundDuration,
             isLive: true
         });
 
@@ -115,6 +123,13 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             "Incorrect invested amount"
         );
 
+        address _pleb = getCurrentPleb(roundId);
+
+        require(
+            !(_pleb == msg.sender),
+            "You cannot deposit again until there is a new pleb"
+        );
+
         uint256 newParticipantId = participants[roundId].length + 1;
 
         participants[roundId].push(
@@ -128,8 +143,11 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             })
         );
 
-        if (getRemainingTime(roundId) <= 120 && getRemainingTime(roundId) > 0) {
-            uint256 newTime = RoundData[roundId].endTime + 600;
+        if (
+            getRemainingTime(roundId) <= thresholdTime &&
+            getRemainingTime(roundId) > 0
+        ) {
+            uint256 newTime = RoundData[roundId].endTime + extraDuration;
             RoundData[roundId].endTime = newTime;
             rounds[roundId - 1].endTime = newTime;
             emit TimeReset(roundId, newTime);
@@ -174,6 +192,51 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
+    @notice Set round duration
+    @param _roundDurationInMinutes, round duration in minutes
+     */
+    function setRoundDuration(
+        uint256 _roundDurationInMinutes
+    ) external onlyOwner {
+        require(
+            _roundDurationInMinutes != 0,
+            "Duration should be greater than 0"
+        );
+        roundDuration = _roundDurationInMinutes * 60;
+    }
+
+    /**
+    @notice Set extra time duration
+    @param _extraDurationInMinutes, extra time duration in minutes
+     */
+
+    function setExtraDuration(
+        uint256 _extraDurationInMinutes
+    ) external onlyOwner {
+        require(
+            _extraDurationInMinutes != 0,
+            "Duration should be greater than 0"
+        );
+        extraDuration = _extraDurationInMinutes * 60;
+    }
+
+    /**
+    @notice Set threshold time 
+    @param _thresholdTime, threshold time after which extra duration will be added
+     */
+
+    function setThresoldTime(uint256 _thresholdTime) external onlyOwner {
+        require(roundDuration > 0, "Set round duration first");
+
+        require(
+            _thresholdTime != 0 && _thresholdTime < roundDuration / 60,
+            "Duration should be greater than 0 and roundDuration"
+        );
+
+        thresholdTime = _thresholdTime * 60;
+    }
+
+    /**
     @notice Get the loser participant data for a round.
     @param roundId,Round Id.
     @return id participant id.
@@ -197,6 +260,27 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             id = participant.participantId;
             wallet = participant.walletAddress;
             amount_lose = participant.invested_amount;
+        }
+    }
+
+    /**
+    @notice Get pleb of a round.
+    @param roundId,Round Id.
+    @return wallet participant wallet.
+ 
+     */
+    function getCurrentPleb(
+        uint256 roundId
+    ) public view returns (address wallet) {
+        require(isCurrentRoundLive(roundId), "Round is not live");
+        if (participants[roundId].length >= 1) {
+            Participant memory participant = participants[roundId][
+                participants[roundId].length - 1
+            ];
+
+            wallet = participant.walletAddress;
+        } else {
+            wallet = address(0);
         }
     }
 

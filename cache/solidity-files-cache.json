@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\contracts\\PlebToHill.sol": {
-      "lastModificationDate": 1671448915669,
-      "contentHash": "0f0cc5d393442cdf08484908e646cee6",
+      "lastModificationDate": 1671710964753,
+      "contentHash": "5b6b6c2f24b779b9ec5fee4eb6b8c355",
       "sourceName": "contracts/PlebToHill.sol",
       "solcConfig": {
         "version": "0.8.17",
