@@ -21,12 +21,17 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
+                "userdoc",
+                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -61,12 +66,17 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
+                "userdoc",
+                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -100,12 +110,17 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
+                "userdoc",
+                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },
@@ -137,12 +152,17 @@
                 "evm.methodIdentifiers",
                 "metadata",
                 "devdoc",
+                "userdoc",
+                "devdoc",
                 "userdoc"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": false
           }
         }
       },

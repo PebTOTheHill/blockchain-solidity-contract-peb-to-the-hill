@@ -8,7 +8,10 @@ describe("PlebToHill", () => {
     const contract = await ethers.getContractFactory("PlebToHill", addr1);
     _contract = await contract.deploy();
     await _contract.deployed();
-    console.log("");
+
+    await _contract.connect(addr1).setRoundDuration(10);
+    await _contract.connect(addr1).setExtraDuration(1);
+    await _contract.connect(addr1).setThresoldTime(2);
   });
 
   it("Should not create a round when contract balance is less than 1 tPLS", async () => {
@@ -183,7 +186,7 @@ describe("PlebToHill", () => {
       value: ethers.utils.parseEther("1.0"),
     });
 
-    await _contract.connect(addr2).addParticipant(1, {
+    await _contract.connect(addr3).addParticipant(1, {
       value: ethers.utils.parseEther("2.0"),
     });
 
@@ -253,7 +256,7 @@ describe("PlebToHill", () => {
     expect(await _contract.getValueForNextParticipant(1)).to.be.equal(
       ethers.utils.parseEther("2.0")
     );
-    await _contract.connect(addr2).addParticipant(1, {
+    await _contract.connect(addr3).addParticipant(1, {
       value: ethers.utils.parseEther("2.0"),
     });
     expect(await _contract.getValueForNextParticipant(1)).to.be.equal(
@@ -295,11 +298,11 @@ describe("PlebToHill", () => {
       value: ethers.utils.parseEther("1.0"),
     });
 
-    await _contract.connect(addr2).addParticipant(1, {
+    await _contract.connect(addr3).addParticipant(1, {
       value: ethers.utils.parseEther("2.0"),
     });
 
-    await _contract.connect(addr2).addParticipant(1, {
+    await _contract.connect(addr1).addParticipant(1, {
       value: ethers.utils.parseEther("4.0"),
     });
 
@@ -352,6 +355,29 @@ describe("PlebToHill", () => {
       const finalTime = (await _contract.getRoundData(1)).endTime;
       console.log("initial", initialTime);
       console.log("final", finalTime);
+    });
+  });
+
+  describe("Restrict pleb", () => {
+    beforeEach(async () => {
+      await addr1.sendTransaction({
+        to: _contract.address,
+        value: ethers.utils.parseEther("1.0"),
+      });
+      await _contract.connect(addr1).createRound();
+    });
+    it("Should restrict the current pleb to join the round twice", async () => {
+      await _contract.connect(addr2).addParticipant(1, {
+        value: ethers.utils.parseEther("1.0"),
+      });
+
+      await expect(
+        _contract.connect(addr2).addParticipant(1, {
+          value: ethers.utils.parseEther("2.0"),
+        })
+      ).to.be.revertedWith(
+        "You cannot deposit again until there is a new pleb"
+      );
     });
   });
 });
