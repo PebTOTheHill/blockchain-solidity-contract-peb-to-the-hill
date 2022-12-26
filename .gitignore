@@ -4,3 +4,9 @@ artifacts/
 cache/
 
 docs/
+
+coverage/
+
+
+.vscode/
+
