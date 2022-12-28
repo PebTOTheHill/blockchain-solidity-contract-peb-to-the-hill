@@ -1,10 +1,25 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-  const Contract = await ethers.getContractFactory("PlebToHill");
+  const [addr1] = await ethers.getSigners();
+
+  const Contract = await ethers.getContractFactory("PlebToHill", addr1);
   const contract = await Contract.deploy();
   await contract.deployed();
+
   console.log("Contract deployed to:", await contract.address);
+
+  const tx1 = await contract.connect(addr1).setRoundDuration(10);
+  await tx1.wait();
+  const tx2 = await contract.connect(addr1).setExtraDuration(1);
+  await tx2.wait();
+  const tx3 = await contract.connect(addr1).setThresoldTime(2);
+  await tx3.wait();
+
+  await addr1.sendTransaction({
+    to: contract.address,
+    value: ethers.utils.parseEther("1.0"),
+  });
 }
 
 main()

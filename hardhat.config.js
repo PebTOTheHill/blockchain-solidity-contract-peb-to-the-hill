@@ -10,6 +10,7 @@ require("solidity-coverage");
 const {
   chainConfig,
 } = require("@nomiclabs/hardhat-etherscan/dist/src/ChainConfig");
+
 chainConfig["testnet"] = {
   chainId: 941,
   urls: {

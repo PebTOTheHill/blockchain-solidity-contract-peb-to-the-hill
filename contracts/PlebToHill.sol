@@ -96,18 +96,28 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                 2) * 5) / 100;
             uint256 prizeAmount = (participants[roundId][0].invested_amount *
                 2) - serviceFee;
-            participants[roundId][0].winnings = prizeAmount;
-            payable(participants[roundId][0].walletAddress).transfer(
-                prizeAmount
-            );
-            payable(poth_address).transfer(serviceFee);
-            emit WinningTransfered(
-                roundId,
-                participants[roundId][0].walletAddress,
-                participants[roundId][0].invested_amount,
-                participants[roundId][0].participantId,
-                prizeAmount
-            );
+
+            (bool sent, ) = participants[roundId][0].walletAddress.call{
+                value: prizeAmount
+            }("");
+
+            if (sent) {
+                participants[roundId][0].winnings = prizeAmount;
+                (bool success, ) = poth_address.call{value: serviceFee}("");
+                require(success);
+                emit WinningTransfered(
+                    roundId,
+                    participants[roundId][0].walletAddress,
+                    participants[roundId][0].invested_amount,
+                    participants[roundId][0].participantId,
+                    prizeAmount
+                );
+            } else {
+                (bool success, ) = poth_address.call{
+                    value: (serviceFee + prizeAmount)
+                }("");
+                require(success);
+            }
         }
         emit RoundFinished(roundId);
     }
@@ -158,18 +168,28 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                 .invested_amount * 2) * 5) / 100;
             uint256 prizeAmount = (participants[roundId][newParticipantId - 2]
                 .invested_amount * 2) - serviceFee;
-            participants[roundId][newParticipantId - 2].winnings = prizeAmount;
 
-            payable(participants[roundId][newParticipantId - 2].walletAddress)
-                .transfer(prizeAmount);
-            payable(poth_address).transfer(serviceFee);
-            emit WinningTransfered(
-                roundId,
-                participants[roundId][newParticipantId - 2].walletAddress,
-                participants[roundId][newParticipantId - 2].invested_amount,
-                participants[roundId][newParticipantId - 2].participantId,
-                prizeAmount
-            );
+            (bool sent, ) = participants[roundId][newParticipantId - 2]
+                .walletAddress
+                .call{value: prizeAmount}("");
+            if (sent) {
+                participants[roundId][newParticipantId - 2]
+                    .winnings = prizeAmount;
+                (bool success, ) = poth_address.call{value: serviceFee}("");
+                require(success);
+                emit WinningTransfered(
+                    roundId,
+                    participants[roundId][newParticipantId - 2].walletAddress,
+                    participants[roundId][newParticipantId - 2].invested_amount,
+                    participants[roundId][newParticipantId - 2].participantId,
+                    prizeAmount
+                );
+            } else {
+                (bool success, ) = poth_address.call{
+                    value: (serviceFee + prizeAmount)
+                }("");
+                require(success);
+            }
         }
 
         emit ParticipantAdded(
