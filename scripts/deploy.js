@@ -3,11 +3,18 @@ const { ethers } = require("hardhat");
 async function main() {
   const [addr1] = await ethers.getSigners();
 
+const TokenContract= await ethers.getContractFactory('PlebToken',addr1);
+const tokenContract= await TokenContract.deploy()
+await tokenContract.deployed();
+
+
+console.log(" Pleb Token Contract deployed to:", await tokenContract.address);
+
   const Contract = await ethers.getContractFactory("PlebToHill", addr1);
-  const contract = await Contract.deploy();
+  const contract = await Contract.deploy(tokenContract.address);
   await contract.deployed();
 
-  console.log("Contract deployed to:", await contract.address);
+  console.log(" Pleb Contract deployed to:", await contract.address);
 
   const tx1 = await contract.connect(addr1).setRoundDuration(10);
   await tx1.wait();
@@ -15,6 +22,12 @@ async function main() {
   await tx2.wait();
   const tx3 = await contract.connect(addr1).setThresoldTime(2);
   await tx3.wait();
+
+  const tx4= await tokenContract.connect(addr1).setPlebContractAddress(contract.address);
+   await tx4.wait();
+
+
+   console.log('-----------COMPLETED------------------');
 
   await addr1.sendTransaction({
     to: contract.address,

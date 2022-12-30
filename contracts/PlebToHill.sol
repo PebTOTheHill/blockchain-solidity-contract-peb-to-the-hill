@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: NONE
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+interface IPlebToken {
+    function mint(address to, uint256 amount) external;
+
+    function totalMarketSupply() external view returns (uint256);
+}
+
 contract PlebToHill is Ownable, ReentrancyGuard {
+    uint256 constant totalSup = 130e12 * 1e18;
+    IPlebToken public plebToken;
+
     uint256 public roundDuration;
     uint256 public extraDuration;
     uint256 public thresholdTime;
@@ -23,6 +32,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         uint256 endTime;
         bool isLive;
     }
+
     address public poth_address;
     mapping(uint256 => Round) private RoundData;
     Round[] private rounds;
@@ -45,6 +55,10 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     );
     event RoundFinished(uint256 roundId);
     event TimeReset(uint256 roundId, uint256 endTime);
+
+    constructor(address _plebToken) {
+        plebToken = IPlebToken(_plebToken);
+    }
 
     /**
      * @notice Create new Round.Only owner can create a new round with 1 tPLS as contract balance.
@@ -119,6 +133,12 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                 require(success);
             }
         }
+
+        (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
+
+        if ((plebToken.totalMarketSupply() + amount_lose) <= totalSup)
+            plebToken.mint(wallet, amount_lose);
+
         emit RoundFinished(roundId);
     }
 
@@ -265,7 +285,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
      */
     function getLoserData(
         uint256 roundId
-    ) external view returns (uint256 id, address wallet, uint256 amount_lose) {
+    ) public view returns (uint256 id, address wallet, uint256 amount_lose) {
         if (
             participants[roundId].length == 1 ||
             participants[roundId].length == 0
