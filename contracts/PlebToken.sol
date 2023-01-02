@@ -22,8 +22,4 @@ contract PlebToken is ERC20, ERC20Burnable, Ownable {
     function mint(address to, uint256 amount) external isMinter(msg.sender) {
         _mint(to, amount);
     }
-
-    function totalMarketSupply() external view returns (uint256) {
-        return totalSupply();
-    }
 }

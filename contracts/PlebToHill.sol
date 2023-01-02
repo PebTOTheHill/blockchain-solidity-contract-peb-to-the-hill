@@ -3,15 +3,15 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-interface IPlebToken {
+interface Token {
     function mint(address to, uint256 amount) external;
 
-    function totalMarketSupply() external view returns (uint256);
+    function totalSupply() external view returns (uint256);
 }
 
 contract PlebToHill is Ownable, ReentrancyGuard {
     uint256 constant totalSup = 130e12 * 1e18;
-    IPlebToken public plebToken;
+    Token public plebToken;
 
     uint256 public roundDuration;
     uint256 public extraDuration;
@@ -56,8 +56,8 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     event RoundFinished(uint256 roundId);
     event TimeReset(uint256 roundId, uint256 endTime);
 
-    constructor(address _plebToken) {
-        plebToken = IPlebToken(_plebToken);
+    constructor(Token _plebToken) {
+        plebToken = _plebToken;
     }
 
     /**
@@ -136,8 +136,10 @@ contract PlebToHill is Ownable, ReentrancyGuard {
 
         (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
 
-        if ((plebToken.totalMarketSupply() + amount_lose) <= totalSup)
-            plebToken.mint(wallet, amount_lose);
+        if (
+            (plebToken.totalSupply() + amount_lose) <= totalSup &&
+            wallet != address(0)
+        ) plebToken.mint(wallet, amount_lose);
 
         emit RoundFinished(roundId);
     }

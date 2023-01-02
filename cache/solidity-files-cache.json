@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\contracts\\PlebToHill.sol": {
-      "lastModificationDate": 1672379763178,
-      "contentHash": "7e9c3f6116de808d2bb28a5f7bb1f31b",
+      "lastModificationDate": 1672648715692,
+      "contentHash": "ea1e0d58d79ad383ad2b763885ac2cef",
       "sourceName": "contracts/PlebToHill.sol",
       "solcConfig": {
         "version": "0.8.17",
@@ -39,7 +39,7 @@
       ],
       "artifacts": [
         "PlebToHill",
-        "PlebTokens"
+        "Token"
       ]
     },
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\node_modules\\@openzeppelin\\contracts\\security\\ReentrancyGuard.sol": {
@@ -156,8 +156,8 @@
       ]
     },
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\contracts\\PlebStaking.sol": {
-      "lastModificationDate": 1672295458724,
-      "contentHash": "d41d8cd98f00b204e9800998ecf8427e",
+      "lastModificationDate": 1672664777453,
+      "contentHash": "603481ac24e3c0aaa179c1bd869292c3",
       "sourceName": "contracts/PlebStaking.sol",
       "solcConfig": {
         "version": "0.8.17",
@@ -184,9 +184,18 @@
           }
         }
       },
-      "imports": [],
-      "versionPragmas": [],
-      "artifacts": []
+      "imports": [
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/security/ReentrancyGuard.sol",
+        "@openzeppelin/contracts/utils/math/SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "PlebStaking",
+        "Token"
+      ]
     },
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\node_modules\\@openzeppelin\\contracts\\token\\ERC20\\extensions\\ERC20Burnable.sol": {
       "lastModificationDate": 1667906582860,
@@ -346,8 +355,8 @@
       ]
     },
     "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\contracts\\PlebToken.sol": {
-      "lastModificationDate": 1672378910700,
-      "contentHash": "37b54527137bfdd3e2274f09322232bf",
+      "lastModificationDate": 1672653748573,
+      "contentHash": "97d591124d4cc094d038e66ec9bc1fe7",
       "sourceName": "contracts/PlebToken.sol",
       "solcConfig": {
         "version": "0.8.17",
@@ -384,6 +393,43 @@
       ],
       "artifacts": [
         "PlebToken"
+      ]
+    },
+    "C:\\Users\\MY\\Desktop\\Rapid_Projects\\pleb-to-hill\\node_modules\\@openzeppelin\\contracts\\utils\\math\\SafeMath.sol": {
+      "lastModificationDate": 1667906583876,
+      "contentHash": "2337f0279507b5edf14a07067adf0d05",
+      "sourceName": "@openzeppelin/contracts/utils/math/SafeMath.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SafeMath"
       ]
     }
   }
