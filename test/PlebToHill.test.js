@@ -2,13 +2,18 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("PlebToHill", () => {
-  let _contract;
+  let _contract, plebToken;
   beforeEach(async () => {
     [addr1, addr2, addr3] = await ethers.getSigners();
+
+    const PlebToken = await ethers.getContractFactory("PlebToken");
+    plebToken = await PlebToken.deploy();
+
     const contract = await ethers.getContractFactory("PlebToHill", addr1);
-    _contract = await contract.deploy();
+    _contract = await contract.deploy(plebToken.address);
     await _contract.deployed();
 
+    await plebToken.setPlebContractAddress(_contract.address);
     await _contract.connect(addr1).setRoundDuration(10);
     await _contract.connect(addr1).setExtraDuration(1);
     await _contract.connect(addr1).setThresoldTime(2);
@@ -202,6 +207,34 @@ describe("PlebToHill", () => {
     expect(data.id).to.be.equal(3);
     expect(data.wallet).to.be.equal(addr1.address);
     expect(data.amount_lose).to.be.equal(ethers.utils.parseEther("4.0"));
+  });
+
+  it("Should mint to Pleb once the round ends", async () => {
+    await addr1.sendTransaction({
+      to: _contract.address,
+      value: ethers.utils.parseEther("1.0"),
+    });
+    await _contract.connect(addr1).createRound();
+    await _contract.connect(addr2).addParticipant(1, {
+      value: ethers.utils.parseEther("1.0"),
+    });
+
+    await _contract.connect(addr3).addParticipant(1, {
+      value: ethers.utils.parseEther("2.0"),
+    });
+
+    await _contract.connect(addr1).addParticipant(1, {
+      value: ethers.utils.parseEther("4.0"),
+    });
+
+    await network.provider.send("evm_increaseTime", [1000]);
+    await network.provider.send("evm_mine");
+    await _contract.connect(addr1).endRound(1);
+
+    const data = await _contract.getLoserData(1);
+    expect(await plebToken.balanceOf(data.wallet)).to.be.equal(
+      data.amount_lose
+    );
   });
 
   describe("Should return zero values when there is no loser or no participant", () => {

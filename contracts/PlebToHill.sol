@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: NONE
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-interface Token {
+interface PlebToken {
     function mint(address to, uint256 amount) external;
 
     function totalSupply() external view returns (uint256);
 }
 
+interface Stake {
+    function accumulateReward() external payable;
+}
+
 contract PlebToHill is Ownable, ReentrancyGuard {
-    uint256 constant totalSup = 130e12 * 1e18;
-    Token public plebToken;
+    uint256 constant TOTAL_SUP = 130e12 * 1e18;
+    PlebToken public plebToken;
+    Stake public pleb_stake_address;
 
     uint256 public roundDuration;
     uint256 public extraDuration;
@@ -33,7 +38,6 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         bool isLive;
     }
 
-    address public poth_address;
     mapping(uint256 => Round) private RoundData;
     Round[] private rounds;
     mapping(uint256 => Participant[]) private participants;
@@ -56,8 +60,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     event RoundFinished(uint256 roundId);
     event TimeReset(uint256 roundId, uint256 endTime);
 
-    constructor(Token _plebToken) {
+    constructor(PlebToken _plebToken, Stake _pleb_stake_address) {
         plebToken = _plebToken;
+        pleb_stake_address = _pleb_stake_address;
     }
 
     /**
@@ -117,7 +122,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
 
             if (sent) {
                 participants[roundId][0].winnings = prizeAmount;
-                (bool success, ) = poth_address.call{value: serviceFee}("");
+                (bool success, ) = address(pleb_stake_address).call{
+                    value: serviceFee
+                }(abi.encodeWithSignature("accumulateReward()"));
                 require(success);
                 emit WinningTransfered(
                     roundId,
@@ -127,9 +134,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                     prizeAmount
                 );
             } else {
-                (bool success, ) = poth_address.call{
+                (bool success, ) = address(pleb_stake_address).call{
                     value: (serviceFee + prizeAmount)
-                }("");
+                }(abi.encodeWithSignature("accumulateReward()"));
                 require(success);
             }
         }
@@ -137,7 +144,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
 
         if (
-            (plebToken.totalSupply() + amount_lose) <= totalSup &&
+            (plebToken.totalSupply() + amount_lose) <= TOTAL_SUP &&
             wallet != address(0)
         ) plebToken.mint(wallet, amount_lose);
 
@@ -197,7 +204,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             if (sent) {
                 participants[roundId][newParticipantId - 2]
                     .winnings = prizeAmount;
-                (bool success, ) = poth_address.call{value: serviceFee}("");
+                (bool success, ) = address(pleb_stake_address).call{
+                    value: serviceFee
+                }(abi.encodeWithSignature("accumulateReward()"));
                 require(success);
                 emit WinningTransfered(
                     roundId,
@@ -207,9 +216,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                     prizeAmount
                 );
             } else {
-                (bool success, ) = poth_address.call{
+                (bool success, ) = address(pleb_stake_address).call{
                     value: (serviceFee + prizeAmount)
-                }("");
+                }(abi.encodeWithSignature("accumulateReward()"));
                 require(success);
             }
         }
@@ -221,16 +230,6 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             newParticipantId,
             block.timestamp
         );
-    }
-
-    /**
-    @notice Set POTH(Pleb of the Hill) wallet address
-    @param _pothwallet, new wallet address
-     */
-
-    function setPothWallet(address _pothwallet) external onlyOwner {
-        require(_pothwallet != address(0), "Zero address not allowed");
-        poth_address = _pothwallet;
     }
 
     /**
