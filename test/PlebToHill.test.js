@@ -2,15 +2,18 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("PlebToHill", () => {
-  let _contract, plebToken;
+  let _contract, plebToken, plebStake;
   beforeEach(async () => {
     [addr1, addr2, addr3] = await ethers.getSigners();
 
     const PlebToken = await ethers.getContractFactory("PlebToken");
     plebToken = await PlebToken.deploy();
 
+    const PlebStake = await ethers.getContractFactory("PlebStaking");
+    plebStake = await PlebStake.deploy(plebToken.address);
+
     const contract = await ethers.getContractFactory("PlebToHill", addr1);
-    _contract = await contract.deploy(plebToken.address);
+    _contract = await contract.deploy(plebToken.address, plebStake.address);
     await _contract.deployed();
 
     await plebToken.setPlebContractAddress(_contract.address);
@@ -314,43 +317,6 @@ describe("PlebToHill", () => {
     const data = await _contract.getAllRounds(1, 3);
 
     console.log(data);
-  });
-
-  it("Should transfer correct amount to the POTH wallet", async () => {
-    await _contract.connect(addr1).setPothWallet(addr3.address);
-
-    const previousBalance = ethers.utils.formatEther(
-      await ethers.provider.getBalance(addr3.address)
-    );
-    await addr1.sendTransaction({
-      to: _contract.address,
-      value: ethers.utils.parseEther("1.0"),
-    });
-    await _contract.connect(addr1).createRound();
-    await _contract.connect(addr2).addParticipant(1, {
-      value: ethers.utils.parseEther("1.0"),
-    });
-
-    await _contract.connect(addr3).addParticipant(1, {
-      value: ethers.utils.parseEther("2.0"),
-    });
-
-    await _contract.connect(addr1).addParticipant(1, {
-      value: ethers.utils.parseEther("4.0"),
-    });
-
-    await network.provider.send("evm_increaseTime", [1000]);
-    await network.provider.send("evm_mine");
-
-    await _contract.connect(addr1).endRound(1);
-
-    const latestBalance = ethers.utils.formatEther(
-      await ethers.provider.getBalance(addr3.address)
-    );
-
-    console.log("previous balance =>", previousBalance);
-
-    console.log("latest balance =>", latestBalance);
   });
 
   it("Should return zero values when there is no round created", async () => {

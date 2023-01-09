@@ -2,21 +2,18 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface PlebToken {
-    function mint(address to, uint256 amount) external;
+interface IPlebToken is IERC20 {}
 
-    function totalSupply() external view returns (uint256);
-}
-
-interface Stake {
-    function accumulateReward() external payable;
+interface IStake {
+    function accumulateReward() external payable returns (bool success);
 }
 
 contract PlebToHill is Ownable, ReentrancyGuard {
-    uint256 constant TOTAL_SUP = 130e12 * 1e18;
-    PlebToken public plebToken;
-    Stake public pleb_stake_address;
+    IPlebToken public plebToken;
+    IStake public pleb_stake_address;
+    uint256 public plebTokens;
 
     uint256 public roundDuration;
     uint256 public extraDuration;
@@ -59,10 +56,11 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     );
     event RoundFinished(uint256 roundId);
     event TimeReset(uint256 roundId, uint256 endTime);
+    event PlebTokenTransfered(uint256 id, address transferedTo, uint256 amount);
 
-    constructor(PlebToken _plebToken, Stake _pleb_stake_address) {
-        plebToken = _plebToken;
-        pleb_stake_address = _pleb_stake_address;
+    constructor(address _plebToken, address _pleb_stake_address) {
+        plebToken = IPlebToken(_plebToken);
+        pleb_stake_address = IStake(_pleb_stake_address);
     }
 
     /**
@@ -122,9 +120,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
 
             if (sent) {
                 participants[roundId][0].winnings = prizeAmount;
-                (bool success, ) = address(pleb_stake_address).call{
+                bool success = pleb_stake_address.accumulateReward{
                     value: serviceFee
-                }(abi.encodeWithSignature("accumulateReward()"));
+                }();
                 require(success);
                 emit WinningTransfered(
                     roundId,
@@ -134,19 +132,22 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                     prizeAmount
                 );
             } else {
-                (bool success, ) = address(pleb_stake_address).call{
-                    value: (serviceFee + prizeAmount)
-                }(abi.encodeWithSignature("accumulateReward()"));
+                bool success = pleb_stake_address.accumulateReward{
+                    value: (prizeAmount + serviceFee)
+                }();
                 require(success);
             }
         }
 
         (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
 
-        if (
-            (plebToken.totalSupply() + amount_lose) <= TOTAL_SUP &&
-            wallet != address(0)
-        ) plebToken.mint(wallet, amount_lose);
+        if (plebTokens >= amount_lose) {
+            require(
+                plebToken.transfer(wallet, amount_lose),
+                "Token not transfered"
+            );
+            emit PlebTokenTransfered(id, wallet, amount_lose);
+        }
 
         emit RoundFinished(roundId);
     }
@@ -204,9 +205,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             if (sent) {
                 participants[roundId][newParticipantId - 2]
                     .winnings = prizeAmount;
-                (bool success, ) = address(pleb_stake_address).call{
+                bool success = pleb_stake_address.accumulateReward{
                     value: serviceFee
-                }(abi.encodeWithSignature("accumulateReward()"));
+                }();
                 require(success);
                 emit WinningTransfered(
                     roundId,
@@ -216,9 +217,9 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                     prizeAmount
                 );
             } else {
-                (bool success, ) = address(pleb_stake_address).call{
-                    value: (serviceFee + prizeAmount)
-                }(abi.encodeWithSignature("accumulateReward()"));
+                bool success = pleb_stake_address.accumulateReward{
+                    value: (prizeAmount + serviceFee)
+                }();
                 require(success);
             }
         }
@@ -275,6 +276,15 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         );
 
         thresholdTime = _thresholdTime * 60;
+    }
+
+    /**
+     * @notice Transfer Pleb Tokens for distribution to this contract
+     * @param _amount Amount of pleb tokens
+     */
+    function transferPleb(uint256 _amount) external onlyOwner {
+        plebTokens = plebTokens + _amount;
+        plebToken.transfer(address(this), _amount);
     }
 
     /**
@@ -441,7 +451,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     /**
      @notice Get the remaining time of a round
      @param roundId,Round Id
-     @return remaining time
+     @return remaining time+
      */
 
     function getRemainingTime(uint256 roundId) public view returns (uint256) {
