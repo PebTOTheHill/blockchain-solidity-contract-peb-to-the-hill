@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const toWei = (num) => ethers.utils.parseEther(num.toString());
 
 describe("PlebToHill", () => {
   let _contract, plebToken, plebStake;
@@ -16,10 +17,13 @@ describe("PlebToHill", () => {
     _contract = await contract.deploy(plebToken.address, plebStake.address);
     await _contract.deployed();
 
-    await plebToken.setPlebContractAddress(_contract.address);
     await _contract.connect(addr1).setRoundDuration(10);
     await _contract.connect(addr1).setExtraDuration(1);
     await _contract.connect(addr1).setThresoldTime(2);
+
+    await plebToken.connect(addr1).approve(_contract.address, toWei(500));
+
+    await _contract.connect(addr1).transferPleb(toWei(500));
   });
 
   it("Should not create a round when contract balance is less than 1 tPLS", async () => {
@@ -212,7 +216,7 @@ describe("PlebToHill", () => {
     expect(data.amount_lose).to.be.equal(ethers.utils.parseEther("4.0"));
   });
 
-  it("Should mint to Pleb once the round ends", async () => {
+  it("Should get Pleb token once the round ends", async () => {
     await addr1.sendTransaction({
       to: _contract.address,
       value: ethers.utils.parseEther("1.0"),
@@ -226,7 +230,7 @@ describe("PlebToHill", () => {
       value: ethers.utils.parseEther("2.0"),
     });
 
-    await _contract.connect(addr1).addParticipant(1, {
+    await _contract.connect(addr2).addParticipant(1, {
       value: ethers.utils.parseEther("4.0"),
     });
 

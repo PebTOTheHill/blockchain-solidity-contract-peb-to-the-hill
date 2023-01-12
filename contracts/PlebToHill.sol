@@ -141,11 +141,12 @@ contract PlebToHill is Ownable, ReentrancyGuard {
 
         (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
 
-        if (plebTokens >= amount_lose) {
+        if (plebTokens >= amount_lose && wallet != address(0)) {
             require(
                 plebToken.transfer(wallet, amount_lose),
                 "Token not transfered"
             );
+            plebTokens -= amount_lose;
             emit PlebTokenTransfered(id, wallet, amount_lose);
         }
 
@@ -279,12 +280,22 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice
+     */
+    function updateStakingContractAddress(
+        address _newStakeAddress
+    ) external onlyOwner {
+        require(_newStakeAddress != address(0), "Zero address is not allowed");
+        pleb_stake_address = IStake(_newStakeAddress);
+    }
+
+    /**
      * @notice Transfer Pleb Tokens for distribution to this contract
      * @param _amount Amount of pleb tokens
      */
     function transferPleb(uint256 _amount) external onlyOwner {
         plebTokens = plebTokens + _amount;
-        plebToken.transfer(address(this), _amount);
+        plebToken.transferFrom(msg.sender, address(this), _amount);
     }
 
     /**
