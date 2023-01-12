@@ -2,8 +2,19 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+interface IPlebToken is IERC20 {}
+
+interface IStake {
+    function accumulateReward() external payable returns (bool success);
+}
 
 contract PlebToHill is Ownable, ReentrancyGuard {
+    IPlebToken public plebToken;
+    IStake public pleb_stake_address;
+    uint256 public plebTokens;
+
     uint256 public roundDuration;
     uint256 public extraDuration;
     uint256 public thresholdTime;
@@ -23,7 +34,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         uint256 endTime;
         bool isLive;
     }
-    address public poth_address;
+
     mapping(uint256 => Round) private RoundData;
     Round[] private rounds;
     mapping(uint256 => Participant[]) private participants;
@@ -45,6 +56,12 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     );
     event RoundFinished(uint256 roundId);
     event TimeReset(uint256 roundId, uint256 endTime);
+    event PlebTokenTransfered(uint256 id, address transferedTo, uint256 amount);
+
+    constructor(address _plebToken, address _pleb_stake_address) {
+        plebToken = IPlebToken(_plebToken);
+        pleb_stake_address = IStake(_pleb_stake_address);
+    }
 
     /**
      * @notice Create new Round.Only owner can create a new round with 1 tPLS as contract balance.
@@ -96,19 +113,42 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                 2) * 5) / 100;
             uint256 prizeAmount = (participants[roundId][0].invested_amount *
                 2) - serviceFee;
-            participants[roundId][0].winnings = prizeAmount;
-            payable(participants[roundId][0].walletAddress).transfer(
-                prizeAmount
-            );
-            payable(poth_address).transfer(serviceFee);
-            emit WinningTransfered(
-                roundId,
-                participants[roundId][0].walletAddress,
-                participants[roundId][0].invested_amount,
-                participants[roundId][0].participantId,
-                prizeAmount
-            );
+
+            (bool sent, ) = participants[roundId][0].walletAddress.call{
+                value: prizeAmount
+            }("");
+
+            if (sent) {
+                participants[roundId][0].winnings = prizeAmount;
+                bool success = pleb_stake_address.accumulateReward{
+                    value: serviceFee
+                }();
+                require(success);
+                emit WinningTransfered(
+                    roundId,
+                    participants[roundId][0].walletAddress,
+                    participants[roundId][0].invested_amount,
+                    participants[roundId][0].participantId,
+                    prizeAmount
+                );
+            } else {
+                bool success = pleb_stake_address.accumulateReward{
+                    value: (prizeAmount + serviceFee)
+                }();
+                require(success);
+            }
         }
+
+        (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
+
+        if (plebTokens >= amount_lose) {
+            require(
+                plebToken.transfer(wallet, amount_lose),
+                "Token not transfered"
+            );
+            emit PlebTokenTransfered(id, wallet, amount_lose);
+        }
+
         emit RoundFinished(roundId);
     }
 
@@ -158,18 +198,30 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                 .invested_amount * 2) * 5) / 100;
             uint256 prizeAmount = (participants[roundId][newParticipantId - 2]
                 .invested_amount * 2) - serviceFee;
-            participants[roundId][newParticipantId - 2].winnings = prizeAmount;
 
-            payable(participants[roundId][newParticipantId - 2].walletAddress)
-                .transfer(prizeAmount);
-            payable(poth_address).transfer(serviceFee);
-            emit WinningTransfered(
-                roundId,
-                participants[roundId][newParticipantId - 2].walletAddress,
-                participants[roundId][newParticipantId - 2].invested_amount,
-                participants[roundId][newParticipantId - 2].participantId,
-                prizeAmount
-            );
+            (bool sent, ) = participants[roundId][newParticipantId - 2]
+                .walletAddress
+                .call{value: prizeAmount}("");
+            if (sent) {
+                participants[roundId][newParticipantId - 2]
+                    .winnings = prizeAmount;
+                bool success = pleb_stake_address.accumulateReward{
+                    value: serviceFee
+                }();
+                require(success);
+                emit WinningTransfered(
+                    roundId,
+                    participants[roundId][newParticipantId - 2].walletAddress,
+                    participants[roundId][newParticipantId - 2].invested_amount,
+                    participants[roundId][newParticipantId - 2].participantId,
+                    prizeAmount
+                );
+            } else {
+                bool success = pleb_stake_address.accumulateReward{
+                    value: (prizeAmount + serviceFee)
+                }();
+                require(success);
+            }
         }
 
         emit ParticipantAdded(
@@ -179,16 +231,6 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             newParticipantId,
             block.timestamp
         );
-    }
-
-    /**
-    @notice Set POTH(Pleb of the Hill) wallet address
-    @param _pothwallet, new wallet address
-     */
-
-    function setPothWallet(address _pothwallet) external onlyOwner {
-        require(_pothwallet != address(0), "Zero address not allowed");
-        poth_address = _pothwallet;
     }
 
     /**
@@ -237,6 +279,15 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Transfer Pleb Tokens for distribution to this contract
+     * @param _amount Amount of pleb tokens
+     */
+    function transferPleb(uint256 _amount) external onlyOwner {
+        plebTokens = plebTokens + _amount;
+        plebToken.transfer(address(this), _amount);
+    }
+
+    /**
     @notice Get the loser participant data for a round.
     @param roundId,Round Id.
     @return id participant id.
@@ -245,7 +296,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
      */
     function getLoserData(
         uint256 roundId
-    ) external view returns (uint256 id, address wallet, uint256 amount_lose) {
+    ) public view returns (uint256 id, address wallet, uint256 amount_lose) {
         if (
             participants[roundId].length == 1 ||
             participants[roundId].length == 0
@@ -400,7 +451,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     /**
      @notice Get the remaining time of a round
      @param roundId,Round Id
-     @return remaining time
+     @return remaining time+
      */
 
     function getRemainingTime(uint256 roundId) public view returns (uint256) {
