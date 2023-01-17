@@ -7,6 +7,6 @@ docs/
 
 coverage/
 
-
+.env
 .vscode/
 

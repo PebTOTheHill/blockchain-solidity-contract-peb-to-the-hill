@@ -9,39 +9,47 @@ async function main() {
 
   // console.log(" Pleb Token Contract deployed to:", await tokenContract.address);
 
-  const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
-  const stakingContract = await StakingContract.deploy(
+  // const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
+  // const stakingContract = await StakingContract.deploy(
+  //   "0xA63C107DE110237b64534b056b42a5dE84ED994A"
+  // );
+  // await stakingContract.deployed();
+
+  // console.log(
+  //   " Pleb Staking Contract deployed to:",
+  //   await stakingContract.address
+  // );
+
+  // const Contract = await ethers.getContractFactory("PlebToHill", addr1);
+  // const contract = await Contract.deploy(
+  //   "0xA63C107DE110237b64534b056b42a5dE84ED994A",
+  //   "0x09B4dd3f7F8C873e6991F78bd11ed3c5dbe37018"
+  // );
+  // await contract.deployed();
+
+  // console.log(" Pleb Contract deployed to:", await contract.address);
+
+  // const tx1 = await contract.connect(addr1).setRoundDuration(5);
+  // await tx1.wait();
+  // const tx2 = await contract.connect(addr1).setExtraDuration(1);
+  // await tx2.wait();
+  // const tx3 = await contract.connect(addr1).setThresoldTime(2);
+  // await tx3.wait();
+
+  // await addr1.sendTransaction({
+  //   to: contract.address,
+  //   value: ethers.utils.parseEther("1.0"),
+  // });
+
+  // console.log("-----------COMPLETED------------------");
+
+  const Faucet = await ethers.getContractFactory("Faucet");
+  const faucet = await Faucet.deploy(
     "0xA63C107DE110237b64534b056b42a5dE84ED994A"
   );
-  await stakingContract.deployed();
+  await faucet.deployed();
 
-  console.log(
-    " Pleb Staking Contract deployed to:",
-    await stakingContract.address
-  );
-
-  const Contract = await ethers.getContractFactory("PlebToHill", addr1);
-  const contract = await Contract.deploy(
-    "0xA63C107DE110237b64534b056b42a5dE84ED994A",
-    stakingContract.address
-  );
-  await contract.deployed();
-
-  console.log(" Pleb Contract deployed to:", await contract.address);
-
-  const tx1 = await contract.connect(addr1).setRoundDuration(5);
-  await tx1.wait();
-  const tx2 = await contract.connect(addr1).setExtraDuration(1);
-  await tx2.wait();
-  const tx3 = await contract.connect(addr1).setThresoldTime(2);
-  await tx3.wait();
-
-  await addr1.sendTransaction({
-    to: contract.address,
-    value: ethers.utils.parseEther("1.0"),
-  });
-
-  console.log("-----------COMPLETED------------------");
+  console.log("Faucet contract deployed at => ", faucet.address);
 }
 
 main()
@@ -52,7 +60,6 @@ main()
   });
 
 // Pleb Token Contract deployed to: 0xA63C107DE110237b64534b056b42a5dE84ED994A
-// Pleb Staking Contract deployed to: 0x16648ce56eA0d8C7d3156FF9Fe2EFFC444Fc05b2
-// Pleb Contract deployed to: 0xfDb85E3c18239b7072f503eeC19c563D23ae0369
+// Pleb Staking address :0x09B4dd3f7F8C873e6991F78bd11ed3c5dbe37018
 
-// https://scan.v2b.testnet.pulsechain.com/address/0xA63C107DE110237b64534b056b42a5dE84ED994A#code - token
+//Faucet : 0xD331327d3d248a8c6E1CAD31bc24F05F5A66F994

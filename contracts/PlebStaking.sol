@@ -33,7 +33,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
     mapping(uint256 => StakeDepositData) public stakers;
     mapping(address => StakeDepositData[]) public stakes;
     mapping(uint256 => uint256) public dayToRatioMapping;
-    StakeDepositData[] public stakersData;
+    StakeDepositData[] internal stakersData;
 
     event StakeAdded(
         uint256 stakeId,
@@ -82,10 +82,6 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
     function stake(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount should be greater than 0");
-        require(
-            plebToken.allowance(msg.sender, address(this)) >= amount,
-            "No allowance. Please grant pleb allowance"
-        );
         require(
             plebToken.balanceOf(msg.sender) >= amount,
             "Cannot stake more than the balance"
@@ -215,10 +211,13 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      */
 
     function distributeReward() external {
+        uint256 totalStakes = totalActiveStakes();
+
         require(rewardCollected > 0, "No reward available.");
-        require(totalActiveStakes() > 0, "No active stakers");
+        require(totalStakes > 0, "No active stakers");
+
         accHedronRewardRate = accHedronRewardRate.add(
-            rewardCollected.mul(1e18).div(totalActiveStakes())
+            rewardCollected.mul(1e18).div(totalStakes)
         );
 
         rewardCollected = 0;
@@ -273,7 +272,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      */
     function claimReward(
         uint256 stakeId
-    ) public nonReentrant hasStaked(stakeId) {
+    ) external nonReentrant hasStaked(stakeId) {
         uint256 reward = calculateRewards(stakeId);
         require(reward > 0, "No reward available to claim");
 

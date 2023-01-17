@@ -19,7 +19,7 @@ describe("PlebStaking", () => {
   describe("Staking", () => {
     it("User should not stake without approvals", async () => {
       await expect(contract.connect(addr1).stake(toWei(10))).to.be.revertedWith(
-        "No allowance. Please grant pleb allowance"
+        "ERC20: insufficient allowance"
       );
     });
 
