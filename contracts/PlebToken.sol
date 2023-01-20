@@ -12,7 +12,8 @@ contract PlebToken is ERC20, ERC20Burnable {
     }
 
     /**
-     * @notice
+     * @notice Burn tokens from the supply
+     * @param amount No. of tokens
      */
     function burnTokens(uint256 amount) external {
         _burn(msg.sender, amount);

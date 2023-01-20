@@ -9,21 +9,21 @@ async function main() {
 
   // console.log(" Pleb Token Contract deployed to:", await tokenContract.address);
 
-  // const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
-  // const stakingContract = await StakingContract.deploy(
-  //   "0xA63C107DE110237b64534b056b42a5dE84ED994A"
-  // );
-  // await stakingContract.deployed();
+  const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
+  const stakingContract = await StakingContract.deploy(
+    "0xA63C107DE110237b64534b056b42a5dE84ED994A"
+  );
+  await stakingContract.deployed();
 
-  // console.log(
-  //   " Pleb Staking Contract deployed to:",
-  //   await stakingContract.address
-  // );
+  console.log(
+    " Pleb Staking Contract deployed to:",
+    await stakingContract.address
+  );
 
   // const Contract = await ethers.getContractFactory("PlebToHill", addr1);
   // const contract = await Contract.deploy(
   //   "0xA63C107DE110237b64534b056b42a5dE84ED994A",
-  //   "0x09B4dd3f7F8C873e6991F78bd11ed3c5dbe37018"
+  //   stakingContract.address
   // );
   // await contract.deployed();
 
@@ -41,15 +41,7 @@ async function main() {
   //   value: ethers.utils.parseEther("1.0"),
   // });
 
-  // console.log("-----------COMPLETED------------------");
-
-  const Faucet = await ethers.getContractFactory("Faucet");
-  const faucet = await Faucet.deploy(
-    "0xA63C107DE110237b64534b056b42a5dE84ED994A"
-  );
-  await faucet.deployed();
-
-  console.log("Faucet contract deployed at => ", faucet.address);
+  console.log("-----------COMPLETED------------------");
 }
 
 main()
@@ -59,7 +51,4 @@ main()
     process.exit(1);
   });
 
-// Pleb Token Contract deployed to: 0xA63C107DE110237b64534b056b42a5dE84ED994A
-// Pleb Staking address :0x09B4dd3f7F8C873e6991F78bd11ed3c5dbe37018
-
-//Faucet : 0xD331327d3d248a8c6E1CAD31bc24F05F5A66F994
+//000000000000000000000000a63c107de110237b64534b056b42a5de84ed994a

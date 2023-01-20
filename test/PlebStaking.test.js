@@ -179,4 +179,23 @@ describe("PlebStaking", () => {
       console.log("balance after =>", balance_2);
     });
   });
+
+  it("Test total active stakes", async () => {
+    console.log("begin =>", await contract.totalActiveStakes());
+    await plebToken.connect(addr1).approve(contract.address, toWei(500));
+    await contract.connect(addr1).stake(toWei(100));
+
+    console.log("first =>", await contract.totalActiveStakes());
+
+    await network.provider.send("evm_increaseTime", [86400]);
+    await network.provider.send("evm_mine");
+    await contract.connect(addr1).stake(toWei(100));
+    console.log("Second =>", await contract.totalActiveStakes());
+
+    await network.provider.send("evm_increaseTime", [86400]);
+    await network.provider.send("evm_mine");
+
+    await contract.connect(addr1).stake(toWei(200));
+    console.log("Third =>", await contract.totalActiveStakes());
+  });
 });

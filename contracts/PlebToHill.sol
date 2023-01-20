@@ -64,6 +64,8 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         pleb_stake_address = IStake(_pleb_stake_address);
     }
 
+    receive() external payable {}
+
     /**
      * @notice Create new Round.Only owner can create a new round with 1 tPLS as contract balance.
      */
@@ -302,6 +304,37 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
+    @notice Get all the rounds data from start to end indices
+    @param start,start index
+    @param end, end index
+    @return Round array
+     */
+    function getAllRounds(
+        uint256 start,
+        uint256 end
+    ) external view returns (Round[] memory) {
+        require(end < rounds.length, "Invalid range");
+        Round[] memory roundArray = new Round[]((end - start) + 1);
+        for (uint256 i = 0; i <= (end - start); i++) {
+            Round memory round = rounds[i + start];
+            roundArray[i] = round;
+        }
+
+        return roundArray;
+    }
+
+    /**
+    @notice Get all participant's detail in a round.
+    @param roundId,Round Id.
+    @return Participant array
+     */
+    function getAllParticipantOfRound(
+        uint256 roundId
+    ) external view returns (Participant[] memory) {
+        return participants[roundId];
+    }
+
+    /**
     @notice Get the loser participant data for a round.
     @param roundId,Round Id.
     @return id participant id.
@@ -350,17 +383,6 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
-    @notice Get all participant's detail in a round.
-    @param roundId,Round Id.
-    @return Participant array
-     */
-    function getAllParticipantOfRound(
-        uint256 roundId
-    ) external view returns (Participant[] memory) {
-        return participants[roundId];
-    }
-
-    /**
      @notice Get Round data of a round
      @return round
      */
@@ -369,23 +391,17 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
-    @notice Get all the rounds data from start to end indices
-    @param start,start index
-    @param end, end index
-    @return Round array
+     @notice Get the remaining time of a round
+     @param roundId,Round Id
+     @return remaining time+
      */
-    function getAllRounds(
-        uint256 start,
-        uint256 end
-    ) external view returns (Round[] memory) {
-        require(end < rounds.length, "Invalid range");
-        Round[] memory roundArray = new Round[]((end - start) + 1);
-        for (uint256 i = 0; i <= (end - start); i++) {
-            Round memory round = rounds[i + start];
-            roundArray[i] = round;
-        }
 
-        return roundArray;
+    function getRemainingTime(uint256 roundId) public view returns (uint256) {
+        Round memory roundData = getRoundData(roundId);
+
+        if (block.timestamp < roundData.endTime)
+            return roundData.endTime - block.timestamp;
+        else return 0;
     }
 
     /**
@@ -463,20 +479,6 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
-     @notice Get the remaining time of a round
-     @param roundId,Round Id
-     @return remaining time+
-     */
-
-    function getRemainingTime(uint256 roundId) public view returns (uint256) {
-        Round memory roundData = getRoundData(roundId);
-
-        if (block.timestamp < roundData.endTime)
-            return roundData.endTime - block.timestamp;
-        else return 0;
-    }
-
-    /**
      * @notice Internal function to transfer amounts to stake contract and Poth wallet
      * @param _amount total amount
      */
@@ -492,6 +494,4 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         (bool success2, ) = pothWallet.call{value: (_amount - rewardShare)}("");
         require(success2, "Poth wallet share transfer failed");
     }
-
-    receive() external payable {}
 }
