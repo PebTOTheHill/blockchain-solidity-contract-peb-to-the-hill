@@ -28,12 +28,12 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
     uint256 public accHedronRewardRate;
     uint256 public rewardCollected;
-    uint256 constant STAKING_PERIOD = 10 days;
+    uint256 public stakingPeriod = 10 days;
 
     mapping(uint256 => StakeDepositData) public stakers;
     mapping(address => StakeDepositData[]) public stakes;
     mapping(uint256 => uint256) public dayToRatioMapping;
-    StakeDepositData[] public stakersData;
+    StakeDepositData[] internal stakersData;
 
     event StakeAdded(
         uint256 stakeId,
@@ -50,19 +50,13 @@ contract PlebStaking is Ownable, ReentrancyGuard {
         uint256 tokenClaimed
     );
 
-    event ClaimedReward(uint256 stakeId, address wallet, uint256 amountClaimed);
+    event ClaimedReward(uint256 stakeId, address wallet, uint256 rewardClaimed);
     event emergencyEndStaked(
         uint256 stakeId,
         address wallet,
         uint256 rewardClaimed,
         uint256 tokenClaimed
     );
-
-    receive() external payable {}
-
-    constructor(address _plebToken) {
-        plebToken = Token(_plebToken);
-    }
 
     modifier hasStaked(uint256 stakeId) {
         require(stakers[stakeId].activeStaked, "Stake is not active");
@@ -73,6 +67,12 @@ contract PlebStaking is Ownable, ReentrancyGuard {
         _;
     }
 
+    constructor(address _plebToken) {
+        plebToken = Token(_plebToken);
+    }
+
+    receive() external payable {}
+
     /* ======== USER FUNCTIONS ======== */
 
     /**
@@ -82,10 +82,6 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
     function stake(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount should be greater than 0");
-        require(
-            plebToken.allowance(msg.sender, address(this)) >= amount,
-            "No allowance. Please grant pleb allowance"
-        );
         require(
             plebToken.balanceOf(msg.sender) >= amount,
             "Cannot stake more than the balance"
@@ -102,7 +98,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
             wallet: msg.sender,
             amount: amount,
             startDate: block.timestamp,
-            endDate: block.timestamp + STAKING_PERIOD,
+            endDate: block.timestamp + stakingPeriod,
             claimedRewards: 0,
             rewardDebt: amount.mul(accHedronRewardRate).div(1e18),
             unstakedStatus: 0, //0 -> default, 1 -> Unstaked, 2 -> Emergency end stake
@@ -143,8 +139,8 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
         stakers[stakeId].activeStaked = false;
         stakers[stakeId].unstakedStatus = 1;
-        stakersData[stakeId].activeStaked = false;
-        stakersData[stakeId].unstakedStatus = 1;
+        stakersData[stakeId - 1].activeStaked = false;
+        stakersData[stakeId - 1].unstakedStatus = 1;
 
         uint256 daysAfterPeriod = getDaysPass(stakeId);
 
@@ -215,29 +211,43 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      */
 
     function distributeReward() external {
+        uint256 totalStakes = totalActiveStakes();
+
         require(rewardCollected > 0, "No reward available.");
-        require(totalActiveStakes() > 0, "No active stakers");
+        require(totalStakes > 0, "No active stakers");
+
         accHedronRewardRate = accHedronRewardRate.add(
-            rewardCollected.mul(1e18).div(totalActiveStakes())
+            rewardCollected.mul(1e18).div(totalStakes)
         );
 
         rewardCollected = 0;
         dayToRatioMapping[currentDay()] = accHedronRewardRate;
     }
 
-    /**
-     *@notice To check if the staking period is over for a given stake
-     *@param stakeId uint256, Stake Id
-     *@return bool
+    /*
+     *@notice To get all the stakes stake by a given wallet address
+     *@param wallet address, Wallet address
+     *@return StakeDepositData[]
      */
-    function hasCompletedStakingPeriod(
-        uint256 stakeId
-    ) internal view returns (bool) {
-        if (block.timestamp > stakers[stakeId].endDate) {
-            return true;
-        } else {
-            return false;
-        }
+    function getStakes(
+        address wallet
+    ) external view returns (StakeDepositData[] memory) {
+        return stakes[wallet];
+    }
+
+    /*
+     *@notice To update staking period.
+     *@param newStakingPeriodInDays uint256, No. of days
+     */
+    function updateStakingPeriod(
+        uint256 newStakingPeriodInDays
+    ) external onlyOwner {
+        require(
+            newStakingPeriodInDays != stakingPeriod,
+            "Add a different staking period"
+        );
+
+        stakingPeriod = newStakingPeriodInDays * 86400; //test this implementation
     }
 
     /*
@@ -262,7 +272,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      */
     function claimReward(
         uint256 stakeId
-    ) public nonReentrant hasStaked(stakeId) {
+    ) external nonReentrant hasStaked(stakeId) {
         uint256 reward = calculateRewards(stakeId);
         require(reward > 0, "No reward available to claim");
 
@@ -319,6 +329,16 @@ contract PlebStaking is Ownable, ReentrancyGuard {
         return _currentDay();
     }
 
+    /**
+     * @notice Get days pass after staking period
+     * @param stakeId ID of stake
+     * @return days , days pass after staking period
+     */
+
+    function getDaysPass(uint256 stakeId) internal view returns (uint256) {
+        return (block.timestamp.sub(stakers[stakeId].endDate)).div(1 days);
+    }
+
     /*
      *@notice Internal function to get the current Day of the contract
      *@return uint256(currentDay)
@@ -328,12 +348,17 @@ contract PlebStaking is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get days pass after staking period
-     * @param stakeId ID of stake
-     * @return days , days pass after staking period
+     *@notice To check if the staking period is over for a given stake
+     *@param stakeId uint256, Stake Id
+     *@return bool
      */
-
-    function getDaysPass(uint256 stakeId) public view returns (uint256) {
-        return (block.timestamp.sub(stakers[stakeId].endDate)).div(1 days);
+    function hasCompletedStakingPeriod(
+        uint256 stakeId
+    ) internal view returns (bool) {
+        if (block.timestamp > stakers[stakeId].endDate) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

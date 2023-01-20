@@ -14,6 +14,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     IPlebToken public plebToken;
     IStake public pleb_stake_address;
     uint256 public plebTokens;
+    address public pothWallet;
 
     uint256 public roundDuration;
     uint256 public extraDuration;
@@ -120,10 +121,8 @@ contract PlebToHill is Ownable, ReentrancyGuard {
 
             if (sent) {
                 participants[roundId][0].winnings = prizeAmount;
-                bool success = pleb_stake_address.accumulateReward{
-                    value: serviceFee
-                }();
-                require(success);
+                transferAmounts(serviceFee);
+
                 emit WinningTransfered(
                     roundId,
                     participants[roundId][0].walletAddress,
@@ -132,20 +131,18 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                     prizeAmount
                 );
             } else {
-                bool success = pleb_stake_address.accumulateReward{
-                    value: (prizeAmount + serviceFee)
-                }();
-                require(success);
+                transferAmounts(prizeAmount + serviceFee);
             }
         }
 
         (uint id, address wallet, uint amount_lose) = getLoserData(roundId);
 
-        if (plebTokens >= amount_lose) {
+        if (plebTokens >= amount_lose && wallet != address(0)) {
             require(
                 plebToken.transfer(wallet, amount_lose),
                 "Token not transfered"
             );
+            plebTokens -= amount_lose;
             emit PlebTokenTransfered(id, wallet, amount_lose);
         }
 
@@ -205,10 +202,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             if (sent) {
                 participants[roundId][newParticipantId - 2]
                     .winnings = prizeAmount;
-                bool success = pleb_stake_address.accumulateReward{
-                    value: serviceFee
-                }();
-                require(success);
+                transferAmounts(serviceFee);
                 emit WinningTransfered(
                     roundId,
                     participants[roundId][newParticipantId - 2].walletAddress,
@@ -217,10 +211,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                     prizeAmount
                 );
             } else {
-                bool success = pleb_stake_address.accumulateReward{
-                    value: (prizeAmount + serviceFee)
-                }();
-                require(success);
+                transferAmounts(prizeAmount + serviceFee);
             }
         }
 
@@ -231,6 +222,19 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             newParticipantId,
             block.timestamp
         );
+    }
+
+    /**
+     * @notice Set POTH wallet to get 50% of the commission
+     * @param _pothWalletAddress New wallet address
+     */
+
+    function setPothWallet(address _pothWalletAddress) external onlyOwner {
+        require(
+            _pothWalletAddress != address(0),
+            "Zero address is not allowed"
+        );
+        pothWallet = _pothWalletAddress;
     }
 
     /**
@@ -279,12 +283,22 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice
+     */
+    function updateStakingContractAddress(
+        address _newStakeAddress
+    ) external onlyOwner {
+        require(_newStakeAddress != address(0), "Zero address is not allowed");
+        pleb_stake_address = IStake(_newStakeAddress);
+    }
+
+    /**
      * @notice Transfer Pleb Tokens for distribution to this contract
      * @param _amount Amount of pleb tokens
      */
     function transferPleb(uint256 _amount) external onlyOwner {
         plebTokens = plebTokens + _amount;
-        plebToken.transfer(address(this), _amount);
+        plebToken.transferFrom(msg.sender, address(this), _amount);
     }
 
     /**
@@ -460,6 +474,23 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         if (block.timestamp < roundData.endTime)
             return roundData.endTime - block.timestamp;
         else return 0;
+    }
+
+    /**
+     * @notice Internal function to transfer amounts to stake contract and Poth wallet
+     * @param _amount total amount
+     */
+
+    function transferAmounts(uint256 _amount) internal {
+        uint256 rewardShare = _amount / 2;
+
+        bool success = pleb_stake_address.accumulateReward{
+            value: rewardShare
+        }();
+        require(success, "Reward share transfer failed");
+
+        (bool success2, ) = pothWallet.call{value: (_amount - rewardShare)}("");
+        require(success2, "Poth wallet share transfer failed");
     }
 
     receive() external payable {}
