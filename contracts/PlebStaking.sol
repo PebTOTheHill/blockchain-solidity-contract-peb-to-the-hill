@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -12,7 +12,7 @@ interface Token is IERC20 {
 contract PlebStaking is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     Token public plebToken;
-    uint256 internal LAUNCH_TIME = block.timestamp;
+    uint256 internal lauchTime = block.timestamp;
 
     struct StakeDepositData {
         uint256 stakeId;
@@ -28,7 +28,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
     uint256 public accHedronRewardRate;
     uint256 public rewardCollected;
-    uint256 public stakingPeriod = 1 days;
+    uint256 public stakingPeriod = 30 days;
 
     mapping(uint256 => StakeDepositData) public stakers;
     mapping(address => StakeDepositData[]) public stakes;
@@ -145,9 +145,14 @@ contract PlebStaking is Ownable, ReentrancyGuard {
         stakersData[stakeId - 1].activeStaked = false;
         stakersData[stakeId - 1].unstakedStatus = 1;
 
+        uint256 index = getUserStakeIndex(msg.sender, stakeId);
+
+        stakes[msg.sender][index].activeStaked = false;
+        stakes[msg.sender][index].unstakedStatus = 1;
+
         uint256 daysAfterPeriod = getDaysPass(stakeId);
 
-        if (daysAfterPeriod < 1800) {
+        if (daysAfterPeriod <= 5) {
             require(
                 plebToken.transfer(stakers[stakeId].wallet, total_amount),
                 "Unstaking failed"
@@ -190,8 +195,14 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
         stakers[stakeId].activeStaked = false;
         stakers[stakeId].unstakedStatus = 2;
+
         stakersData[stakeId - 1].activeStaked = false;
         stakersData[stakeId - 1].unstakedStatus = 2;
+
+        uint256 index = getUserStakeIndex(msg.sender, stakeId);
+
+        stakes[msg.sender][index].activeStaked = false;
+        stakes[msg.sender][index].unstakedStatus = 2;
 
         plebToken.burnTokens(stakers[stakeId].amount.sub(pleb));
         emit emergencyEndStaked(stakeId, stakers[stakeId].wallet, reward, pleb);
@@ -282,7 +293,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      */
     function claimReward(
         uint256 stakeId
-    ) public nonReentrant hasStaked(stakeId) {
+    ) external nonReentrant hasStaked(stakeId) {
         require(
             block.timestamp <
                 (stakers[stakeId].endDate).add(getDaysPass(stakeId))
@@ -301,6 +312,22 @@ contract PlebStaking is Ownable, ReentrancyGuard {
                 reward
             );
 
+            stakersData[stakeId - 1].claimedRewards = stakersData[stakeId - 1]
+                .claimedRewards
+                .add(reward);
+            stakersData[stakeId - 1].rewardDebt = stakersData[stakeId - 1]
+                .rewardDebt
+                .add(reward);
+
+            uint256 index = getUserStakeIndex(msg.sender, stakeId);
+
+            stakes[msg.sender][index].claimedRewards = stakes[msg.sender][index]
+                .claimedRewards
+                .add(reward);
+            stakes[msg.sender][index].rewardDebt = stakes[msg.sender][index]
+                .rewardDebt
+                .add(reward);
+
             emit ClaimedReward(stakeId, stakers[stakeId].wallet, reward);
         }
     }
@@ -317,7 +344,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
 
         if (hasCompletedStakingPeriod(stakeId)) {
             uint256 endDate = ((s.endDate - s.startDate).div(1 days)).add(
-                (s.startDate - LAUNCH_TIME).div(1 days)
+                (s.startDate - lauchTime).div(1 days)
             );
             for (uint256 i = endDate; i > 0; i--) {
                 if (dayToRatioMapping[i] > 0) {
@@ -350,10 +377,9 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      * @return days , days pass after staking period
      */
 
-    function getDaysPass(uint256 stakeId) public view returns (uint256) {
+    function getDaysPass(uint256 stakeId) internal view returns (uint256) {
         if (block.timestamp < stakers[stakeId].endDate) return 0;
-        return (block.timestamp.sub(stakers[stakeId].endDate));
-        // return (block.timestamp.sub(stakers[stakeId].endDate)).div(1 days);
+        return (block.timestamp.sub(stakers[stakeId].endDate)).div(1 days);
     }
 
     /*
@@ -361,7 +387,7 @@ contract PlebStaking is Ownable, ReentrancyGuard {
      *@return uint256(currentDay)
      */
     function _currentDay() internal view returns (uint256) {
-        return (block.timestamp.sub(LAUNCH_TIME)).div(1 days).add(1);
+        return (block.timestamp.sub(lauchTime)).div(1 days).add(1);
     }
 
     /**
@@ -376,6 +402,23 @@ contract PlebStaking is Ownable, ReentrancyGuard {
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * @notice Get index of stake for an user address
+     */
+    function getUserStakeIndex(
+        address _wallet,
+        uint256 stakeId
+    ) internal view returns (uint256 index) {
+        StakeDepositData[] memory s = stakes[_wallet];
+
+        for (uint i = 0; i < s.length; i++) {
+            if (s[i].stakeId == stakeId) {
+                index = i;
+                break;
+            }
         }
     }
 
