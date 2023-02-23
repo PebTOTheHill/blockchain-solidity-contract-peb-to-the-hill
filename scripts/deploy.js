@@ -9,23 +9,27 @@ async function main() {
 
   // console.log(" Pleb Token Contract deployed at:", tokenContract.address);
 
-  // const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
-  // const stakingContract = await StakingContract.deploy(tokenContract.address);
-  // await stakingContract.deployed();
+  const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
+  const stakingContract = await StakingContract.deploy(
+    "0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9"
+  );
+  await stakingContract.deployed();
 
-  // console.log(" Pleb Staking Contract deployed at:", stakingContract.address);
+  console.log(" Pleb Staking Contract deployed at:", stakingContract.address);
 
-  // const PlebReferral = await ethers.getContractFactory("PlebReferral", addr1);
-  // const plebReferral = await PlebReferral.deploy(tokenContract.address);
-  // await plebReferral.deployed();
+  const PlebReferral = await ethers.getContractFactory("PlebReferral", addr1);
+  const plebReferral = await PlebReferral.deploy(
+    "0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9"
+  );
+  await plebReferral.deployed();
 
-  // console.log("Referal contract deployed at : ", plebReferral.address);
+  console.log("Referal contract deployed at : ", plebReferral.address);
 
   const Contract = await ethers.getContractFactory("PlebToHill", addr1);
   const contract = await Contract.deploy(
-    "0xD6B32794C57521a172D9c3075f81A2B39dce8eec",
-    "0xD45dB0a2D4E9223AD344E2C322aC96b0d3260042",
-    "0xd952727aadEfF6EeB186Bc66F58246484a07f36D"
+    "0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9",
+    stakingContract.address,
+    plebReferral.address
   );
   await contract.deployed();
 
@@ -53,8 +57,15 @@ main()
     process.exit(1);
   });
 
-// https://scan.v2b.testnet.pulsechain.com/address/0xD6B32794C57521a172D9c3075f81A2B39dce8eec#code  - Token
+// Pleb Token Contract deployed at: 0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9
+// Pleb Staking Contract deployed at: 0x862b122B8575A1CDC8A25eb2687c9B018ae0212A
+// Referal contract deployed at :  0xf1621115FE07a270cf4d494D13D41e983128584E
+//  Pleb Contract deployed at: 0x2C082D260519371eFaa0565de44dD3c1dB3038ba
 
-// https://scan.v2b.testnet.pulsechain.com/address/0xD45dB0a2D4E9223AD344E2C322aC96b0d3260042#code   -  Staking
+// https://scan.v2b.testnet.pulsechain.com/address/0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9#code  - token
 
-// https://scan.v2b.testnet.pulsechain.com/address/0xd952727aadEfF6EeB186Bc66F58246484a07f36D#code    - Referal
+//https://scan.v2b.testnet.pulsechain.com/address/0xf1621115FE07a270cf4d494D13D41e983128584E#code - referrral
+
+// https://scan.v2b.testnet.pulsechain.com/address/0x862b122B8575A1CDC8A25eb2687c9B018ae0212A#code - staking
+
+// https://scan.v2b.testnet.pulsechain.com/address/0x2C082D260519371eFaa0565de44dD3c1dB3038ba#code - pleb game

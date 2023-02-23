@@ -31,42 +31,110 @@ describe("PlebReferral Contract", () => {
     await plebToHill.connect(addr1).setThresoldTime(2);
   });
 
-  describe("Transfer referral", () => {
+  it("Should not generate the referral code without 1 tpls", async () => {
+    await expect(
+      contract.connect(addr1).generateReferralCode()
+    ).to.be.revertedWith(
+      "You need to pay at least 1 TPLS to generate a referral code."
+    );
+  });
+
+  it("Should generate referral code for 1 tPLS", async () => {
+    expect(await contract.getReferralCode(addr1.address)).to.be.equal("0x");
+
+    await contract.connect(addr1).generateReferralCode({
+      value: toWei(1),
+    });
+    console.log(await contract.getReferralCode(addr1.address));
+  });
+
+  describe("set Referral", () => {
+    let referralCode;
     beforeEach(async () => {
+      await contract.connect(addr1).generateReferralCode({ value: toWei(1) });
+      referralCode = await contract.getReferralCode(addr1.address);
+    });
+
+    it("Only owner can set referral", async () => {
+      await expect(
+        contract
+          .connect(addr2)
+          .setReferrer(addr1.address, addr2.address, referralCode)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Should not set referral if referral code is not valid", async () => {
+      referralCode =
+        "0x307800000000000000000000000000000000000000000000000000000003c2dc2439";
+      await expect(
+        contract
+          .connect(addr1)
+          .setReferrer(addr1.address, addr2.address, referralCode)
+      ).to.be.revertedWith("Referral code does not match");
+    });
+
+    it("Refree and referrer address should not be same", async () => {
+      await expect(
+        contract
+          .connect(addr1)
+          .setReferrer(addr1.address, addr1.address, referralCode)
+      ).to.be.revertedWith("Referre and referrer address cannot be same");
+    });
+
+    it("Refree should not have more than one referrer", async () => {
+      await contract
+        .connect(addr1)
+        .setReferrer(addr1.address, addr2.address, referralCode);
+      await expect(
+        contract
+          .connect(addr1)
+          .setReferrer(addr1.address, addr2.address, referralCode)
+      ).to.be.revertedWith("Referee already has a referrer");
+    });
+
+    it("Should set referral", async () => {
+      await contract
+        .connect(addr1)
+        .setReferrer(addr1.address, addr2.address, referralCode);
+      expect(await contract.getReferrer(addr2.address)).to.be.equal(
+        addr1.address
+      );
+    });
+  });
+
+  describe("transfer pleb", () => {
+    let referralCode;
+    beforeEach(async () => {
+      await contract.connect(addr1).generateReferralCode({ value: toWei(1) });
+      referralCode = await contract.getReferralCode(addr1.address);
+      await contract
+        .connect(addr1)
+        .setReferrer(addr1.address, addr2.address, referralCode);
+
       await addr1.sendTransaction({
         to: plebToHill.address,
         value: ethers.utils.parseEther("1.0"),
       });
-
       await plebToHill.connect(addr1).createRound();
 
-      await contract.setReferrer(addr2.address, addr3.address);
+      await contract.connect(addr1).setPlebContract(plebToHill.address);
     });
 
-    it("Should transfer correct amount to referrer and refere", async () => {
-      await contract.connect(addr1).setPlebContract(plebToHill.address);
+    it("Should transfer 5 % of the playing amount to both refree and referrer", async () => {
+      const balance_1_before = await tokenContract.balanceOf(addr1.address);
 
-      console.log("before addr2", await tokenContract.balanceOf(addr2.address));
-      console.log("before addr3", await tokenContract.balanceOf(addr3.address));
+      const balance_2_before = await tokenContract.balanceOf(addr2.address);
 
       await plebToHill.connect(addr2).addParticipant(1, {
-        value: toWei(1),
+        value: ethers.utils.parseEther("1.0"),
       });
 
-      await plebToHill.connect(addr3).addParticipant(1, {
-        value: toWei(2),
-      });
+      const balance_1_after = await tokenContract.balanceOf(addr1.address);
 
-      console.log("after addr2", await tokenContract.balanceOf(addr2.address));
-      console.log("after addr3", await tokenContract.balanceOf(addr3.address));
-    });
+      const balance_2_after = await tokenContract.balanceOf(addr2.address);
 
-    it("Only pleb contract can call the transfer refer amount", async () => {
-      await expect(
-        plebToHill.connect(addr2).addParticipant(1, {
-          value: toWei(1),
-        })
-      ).to.be.revertedWith("Only Pleb Contract can call this method");
+      expect(balance_1_after.sub(balance_1_before)).to.be.equal(toWei(0.05));
+      expect(balance_2_after.sub(balance_2_before)).to.be.equal(toWei(0.05));
     });
   });
 });

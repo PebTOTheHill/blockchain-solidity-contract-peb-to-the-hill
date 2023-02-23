@@ -5,17 +5,16 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PlebReferral is Ownable {
+    /// Token Contract Address
     IERC20 public token;
+    /// Pleb Contract Address
     address public plebContract;
 
     ///Mapping to store the referral relationship
     mapping(address => address) private referrals;
 
-    ///Mapping to store the referral link
-    mapping(address => string) private referralLinks;
-
     ///Mapping to store the referral code
-    mapping(address => uint) private referralCodes;
+    mapping(address => bytes) private referralCodes;
 
     /// Event to emit when a referral reward is claimed
     event ClaimedReferralReward(
@@ -25,7 +24,7 @@ contract PlebReferral is Ownable {
     );
 
     /// Event to emit when a referral link is generated
-    event ReferralLinkGenerated(address referrer, string referralLink);
+    event ReferralCodeGenerated(address referrer, bytes referralCode);
 
     /// Modifier to check if calling contract is plebToHill.
     modifier isPlebContract(address _contract) {
@@ -36,9 +35,13 @@ contract PlebReferral is Ownable {
         _;
     }
 
+    /// Constructor to set the token address
     constructor(address _token) {
         token = IERC20(_token);
     }
+
+    /// Fallback function to receive the ether
+    receive() external payable {}
 
     /**
      * @notice Distribute the referred amount
@@ -70,7 +73,7 @@ contract PlebReferral is Ownable {
     function setReferrer(
         address referrer,
         address referee,
-        uint _referralCode
+        bytes memory _referralCode
     ) external onlyOwner {
         require(
             referrer != referee,
@@ -83,13 +86,7 @@ contract PlebReferral is Ownable {
         );
 
         require(
-            keccak256(abi.encodePacked(referralLinks[referrer])) !=
-                keccak256(abi.encodePacked("")),
-            "Referrer does not have a referral link"
-        );
-
-        require(
-            referralCodes[referrer] == _referralCode,
+            keccak256(referralCodes[referrer]) == keccak256(_referralCode),
             "Referral code does not match"
         );
 
@@ -106,29 +103,25 @@ contract PlebReferral is Ownable {
     }
 
     /**
-     * @notice Generate Referral link
+     * @notice Generate Referral Code
      */
-    function generateReferralLink() public payable {
+    function generateReferralCode() external payable {
         require(
             msg.value >= 1 ether,
-            "You need to pay at least 1 TPLS to generate a referral link."
+            "You need to pay at least 1 TPLS to generate a referral code."
         );
 
-        uint referralCode = uint(
-            keccak256(abi.encodePacked(block.timestamp, msg.sender))
-        ) % 1000000;
-
-        string memory referralLink = string(
-            abi.encodePacked(
-                "https://plebofthehill.com/?referralCode=",
-                referralCode
+        uint code = uint(
+            keccak256(
+                abi.encodePacked(block.difficulty, block.timestamp, msg.sender)
             )
-        );
+        ) % 100000000000;
 
-        referralLinks[msg.sender] = referralLink;
+        bytes memory referralCode = (abi.encodePacked("0x", code));
+
         referralCodes[msg.sender] = referralCode;
 
-        emit ReferralLinkGenerated(msg.sender, referralLink);
+        emit ReferralCodeGenerated(msg.sender, referralCode);
     }
 
     /**
@@ -136,9 +129,18 @@ contract PlebReferral is Ownable {
      * @param _address Referrer address
      * @return referral link
      */
-    function getReferralLink(
+    function getReferralCode(
         address _address
-    ) external view returns (string memory) {
-        return referralLinks[_address];
+    ) external view returns (bytes memory) {
+        return referralCodes[_address];
+    }
+
+    /**
+     * @notice Get the referral code
+     * @param _address Referrer address
+     * @return referral code
+     */
+    function getReferrer(address _address) external view returns (address) {
+        return referrals[_address];
     }
 }
