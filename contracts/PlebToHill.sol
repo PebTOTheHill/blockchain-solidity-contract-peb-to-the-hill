@@ -313,6 +313,16 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         require(plebToken.transferFrom(msg.sender, address(this), _amount));
     }
 
+    function updateReferralContract(
+        address _plebReferralContract
+    ) external onlyOwner {
+        require(
+            _plebReferralContract != address(0),
+            "Zero address not allowed"
+        );
+        plebReferralContractAddress = IReferral(_plebReferralContract);
+    }
+
     /**
     @notice Get all the rounds data from start to end indices
     @param start,start index

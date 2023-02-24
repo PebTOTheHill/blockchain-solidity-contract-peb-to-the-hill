@@ -102,6 +102,10 @@ contract PlebReferral is Ownable {
         plebContract = _plebContract;
     }
 
+    function revokeReferral(address _refree) external onlyOwner {
+        referrals[_refree] = address(0);
+    }
+
     /**
      * @notice Generate Referral Code
      */
@@ -109,6 +113,11 @@ contract PlebReferral is Ownable {
         require(
             msg.value >= 1 ether,
             "You need to pay at least 1 TPLS to generate a referral code."
+        );
+
+        require(
+            referralCodes[msg.sender].length == 0,
+            "Already have a referral code"
         );
 
         uint code = uint(
