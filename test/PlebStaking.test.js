@@ -2,7 +2,6 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 const toWei = (num) => ethers.utils.parseEther(num.toString());
-const fromWei = (num) => ethers.utils.formatEther(num);
 
 describe("PlebStaking", () => {
   let contract, plebToken;
@@ -60,7 +59,7 @@ describe("PlebStaking", () => {
 
       const rewardBefore = await contract.calculateRewards(1);
 
-      await network.provider.send("evm_increaseTime", [950400]);
+      await network.provider.send("evm_increaseTime", [2593000]);
       await network.provider.send("evm_mine");
 
       await contract.accumulateReward({
@@ -123,6 +122,10 @@ describe("PlebStaking", () => {
       await contract.distributeReward();
     });
 
+    it("user should claim", async () => {
+      await contract.claimReward(1);
+    });
+
     it("User cannot unstake before staking period is over", async () => {
       await expect(contract.unstake(1)).to.be.revertedWith(
         "Staking period is not over"
@@ -130,7 +133,7 @@ describe("PlebStaking", () => {
     });
 
     it("After unstake user will get PLEB tokens and reward ", async () => {
-      await network.provider.send("evm_increaseTime", [950400]);
+      await network.provider.send("evm_increaseTime", [2593000]);
       await network.provider.send("evm_mine");
 
       const pleb_balance_1 = await plebToken.balanceOf(addr1.address);
@@ -178,5 +181,24 @@ describe("PlebStaking", () => {
       console.log("pleb token balance after => ", pleb_balance_2);
       console.log("balance after =>", balance_2);
     });
+  });
+
+  it("Test total active stakes", async () => {
+    console.log("begin =>", await contract.totalActiveStakes());
+    await plebToken.connect(addr1).approve(contract.address, toWei(500));
+    await contract.connect(addr1).stake(toWei(100));
+
+    console.log("first =>", await contract.totalActiveStakes());
+
+    await network.provider.send("evm_increaseTime", [86400]);
+    await network.provider.send("evm_mine");
+    await contract.connect(addr1).stake(toWei(100));
+    console.log("Second =>", await contract.totalActiveStakes());
+
+    await network.provider.send("evm_increaseTime", [86400]);
+    await network.provider.send("evm_mine");
+
+    await contract.connect(addr1).stake(toWei(200));
+    console.log("Third =>", await contract.totalActiveStakes());
   });
 });

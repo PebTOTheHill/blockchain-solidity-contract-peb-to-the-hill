@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: NONE
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-interface IPlebToken is IERC20 {}
 
 interface IStake {
     function accumulateReward() external payable returns (bool success);
 }
 
+interface IReferral {
+    function distributeReferredAmount(address player, uint256 value) external;
+}
+
 contract PlebToHill is Ownable, ReentrancyGuard {
-    IPlebToken public plebToken;
-    IStake public pleb_stake_address;
+    IERC20 public plebToken;
+    IStake public plebStakeAddress;
+    IReferral public plebReferralContractAddress;
     uint256 public plebTokens;
     address public pothWallet;
 
@@ -36,7 +39,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         bool isLive;
     }
 
-    mapping(uint256 => Round) private RoundData;
+    mapping(uint256 => Round) private roundData;
     Round[] private rounds;
     mapping(uint256 => Participant[]) private participants;
 
@@ -59,10 +62,17 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     event TimeReset(uint256 roundId, uint256 endTime);
     event PlebTokenTransfered(uint256 id, address transferedTo, uint256 amount);
 
-    constructor(address _plebToken, address _pleb_stake_address) {
-        plebToken = IPlebToken(_plebToken);
-        pleb_stake_address = IStake(_pleb_stake_address);
+    constructor(
+        address _plebToken,
+        address _plebStakeAddress,
+        address _plebReferralContract
+    ) {
+        plebToken = IERC20(_plebToken);
+        plebStakeAddress = IStake(_plebStakeAddress);
+        plebReferralContractAddress = IReferral(_plebReferralContract);
     }
+
+    receive() external payable {}
 
     /**
      * @notice Create new Round.Only owner can create a new round with 1 tPLS as contract balance.
@@ -84,18 +94,18 @@ contract PlebToHill is Ownable, ReentrancyGuard {
                 "Previous round is not finished yet"
             );
 
-        RoundData[newRoundId] = Round({
+        roundData[newRoundId] = Round({
             roundId: newRoundId,
             startTime: block.timestamp,
             endTime: block.timestamp + roundDuration,
             isLive: true
         });
 
-        rounds.push(RoundData[newRoundId]);
+        rounds.push(roundData[newRoundId]);
         emit RoundCreated(
             newRoundId,
-            RoundData[newRoundId].startTime,
-            RoundData[newRoundId].endTime
+            roundData[newRoundId].startTime,
+            roundData[newRoundId].endTime
         );
     }
 
@@ -105,8 +115,8 @@ contract PlebToHill is Ownable, ReentrancyGuard {
      */
     function endRound(uint256 roundId) external onlyOwner {
         require(!isCurrentRoundLive(roundId), "Round is  live");
-        require(RoundData[roundId].isLive, "Round already finished");
-        RoundData[roundId].isLive = false;
+        require(roundData[roundId].isLive, "Round already finished");
+        roundData[roundId].isLive = false;
         rounds[roundId - 1].isLive = false;
 
         if (participants[roundId].length == 1) {
@@ -184,8 +194,8 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             getRemainingTime(roundId) <= thresholdTime &&
             getRemainingTime(roundId) > 0
         ) {
-            uint256 newTime = RoundData[roundId].endTime + extraDuration;
-            RoundData[roundId].endTime = newTime;
+            uint256 newTime = roundData[roundId].endTime + extraDuration;
+            roundData[roundId].endTime = newTime;
             rounds[roundId - 1].endTime = newTime;
             emit TimeReset(roundId, newTime);
         }
@@ -215,6 +225,11 @@ contract PlebToHill is Ownable, ReentrancyGuard {
             }
         }
 
+        plebReferralContractAddress.distributeReferredAmount(
+            msg.sender,
+            msg.value
+        );
+
         emit ParticipantAdded(
             roundId,
             msg.sender,
@@ -226,15 +241,12 @@ contract PlebToHill is Ownable, ReentrancyGuard {
 
     /**
      * @notice Set POTH wallet to get 50% of the commission
-     * @param _pothWalletAddress New wallet address
+     * @param pothWalletAddress New wallet address
      */
 
-    function setPothWallet(address _pothWalletAddress) external onlyOwner {
-        require(
-            _pothWalletAddress != address(0),
-            "Zero address is not allowed"
-        );
-        pothWallet = _pothWalletAddress;
+    function setPothWallet(address pothWalletAddress) external onlyOwner {
+        require(pothWalletAddress != address(0), "Zero address is not allowed");
+        pothWallet = pothWalletAddress;
     }
 
     /**
@@ -286,10 +298,10 @@ contract PlebToHill is Ownable, ReentrancyGuard {
      * @notice
      */
     function updateStakingContractAddress(
-        address _newStakeAddress
+        address newStakeAddress
     ) external onlyOwner {
-        require(_newStakeAddress != address(0), "Zero address is not allowed");
-        pleb_stake_address = IStake(_newStakeAddress);
+        require(newStakeAddress != address(0), "Zero address is not allowed");
+        plebStakeAddress = IStake(newStakeAddress);
     }
 
     /**
@@ -298,7 +310,48 @@ contract PlebToHill is Ownable, ReentrancyGuard {
      */
     function transferPleb(uint256 _amount) external onlyOwner {
         plebTokens = plebTokens + _amount;
-        plebToken.transferFrom(msg.sender, address(this), _amount);
+        require(plebToken.transferFrom(msg.sender, address(this), _amount));
+    }
+
+    function updateReferralContract(
+        address _plebReferralContract
+    ) external onlyOwner {
+        require(
+            _plebReferralContract != address(0),
+            "Zero address not allowed"
+        );
+        plebReferralContractAddress = IReferral(_plebReferralContract);
+    }
+
+    /**
+    @notice Get all the rounds data from start to end indices
+    @param start,start index
+    @param end, end index
+    @return Round array
+     */
+    function getAllRounds(
+        uint256 start,
+        uint256 end
+    ) external view returns (Round[] memory) {
+        require(end < rounds.length, "Invalid range");
+        Round[] memory roundArray = new Round[]((end - start) + 1);
+        for (uint256 i = 0; i <= (end - start); i++) {
+            Round memory round = rounds[i + start];
+            roundArray[i] = round;
+        }
+
+        return roundArray;
+    }
+
+    /**
+    @notice Get all participant's detail in a round.
+    @param roundId,Round Id.
+    @return Participant array
+     */
+    function getAllParticipantOfRound(
+        uint256 roundId
+    ) external view returns (Participant[] memory) {
+        return participants[roundId];
     }
 
     /**
@@ -350,42 +403,25 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     }
 
     /**
-    @notice Get all participant's detail in a round.
-    @param roundId,Round Id.
-    @return Participant array
-     */
-    function getAllParticipantOfRound(
-        uint256 roundId
-    ) external view returns (Participant[] memory) {
-        return participants[roundId];
-    }
-
-    /**
      @notice Get Round data of a round
      @return round
      */
     function getRoundData(uint256 roundId) public view returns (Round memory) {
-        return RoundData[roundId];
+        return roundData[roundId];
     }
 
     /**
-    @notice Get all the rounds data from start to end indices
-    @param start,start index
-    @param end, end index
-    @return Round array
+     @notice Get the remaining time of a round
+     @param roundId,Round Id
+     @return remaining time+
      */
-    function getAllRounds(
-        uint256 start,
-        uint256 end
-    ) external view returns (Round[] memory) {
-        require(end < rounds.length, "Invalid range");
-        Round[] memory roundArray = new Round[]((end - start) + 1);
-        for (uint256 i = 0; i <= (end - start); i++) {
-            Round memory round = rounds[i + start];
-            roundArray[i] = round;
-        }
 
-        return roundArray;
+    function getRemainingTime(uint256 roundId) public view returns (uint256) {
+        Round memory round = getRoundData(roundId);
+
+        if (block.timestamp < round.endTime)
+            return round.endTime - block.timestamp;
+        else return 0;
     }
 
     /**
@@ -420,7 +456,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
         )
     {
         if (rounds.length > 0) {
-            Round memory round = RoundData[rounds.length];
+            Round memory round = roundData[rounds.length];
             return (
                 rounds.length,
                 round.startTime,
@@ -437,7 +473,7 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     @return finished
      */
     function IsPreviousRoundFinished() internal view returns (bool) {
-        bool finished;
+        bool finished = false;
         if (
             rounds[rounds.length - 1].endTime < block.timestamp &&
             !(rounds[rounds.length - 1].isLive)
@@ -455,25 +491,11 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     function isCurrentRoundLive(uint256 roundId) internal view returns (bool) {
         bool isLive;
         if (
-            RoundData[roundId].endTime >= block.timestamp &&
-            RoundData[roundId].isLive
+            roundData[roundId].endTime >= block.timestamp &&
+            roundData[roundId].isLive
         ) isLive = true;
 
         return isLive;
-    }
-
-    /**
-     @notice Get the remaining time of a round
-     @param roundId,Round Id
-     @return remaining time+
-     */
-
-    function getRemainingTime(uint256 roundId) public view returns (uint256) {
-        Round memory roundData = getRoundData(roundId);
-
-        if (block.timestamp < roundData.endTime)
-            return roundData.endTime - block.timestamp;
-        else return 0;
     }
 
     /**
@@ -484,14 +506,10 @@ contract PlebToHill is Ownable, ReentrancyGuard {
     function transferAmounts(uint256 _amount) internal {
         uint256 rewardShare = _amount / 2;
 
-        bool success = pleb_stake_address.accumulateReward{
-            value: rewardShare
-        }();
+        bool success = plebStakeAddress.accumulateReward{value: rewardShare}();
         require(success, "Reward share transfer failed");
 
         (bool success2, ) = pothWallet.call{value: (_amount - rewardShare)}("");
         require(success2, "Poth wallet share transfer failed");
     }
-
-    receive() external payable {}
 }

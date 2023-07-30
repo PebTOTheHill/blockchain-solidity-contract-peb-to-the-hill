@@ -7,49 +7,47 @@ async function main() {
   // const tokenContract = await TokenContract.deploy();
   // await tokenContract.deployed();
 
-  // console.log(" Pleb Token Contract deployed to:", await tokenContract.address);
+  // console.log(" Pleb Token Contract deployed at:", tokenContract.address);
 
   // const StakingContract = await ethers.getContractFactory("PlebStaking", addr1);
   // const stakingContract = await StakingContract.deploy(
-  //   "0xA63C107DE110237b64534b056b42a5dE84ED994A"
+  //   "0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9"
   // );
   // await stakingContract.deployed();
 
-  // console.log(
-  //   " Pleb Staking Contract deployed to:",
-  //   await stakingContract.address
+  // console.log(" Pleb Staking Contract deployed at:", stakingContract.address);
+
+  // const PlebReferral = await ethers.getContractFactory("PlebReferral", addr1);
+  // const plebReferral = await PlebReferral.deploy(
+  //   "0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9"
   // );
+  // await plebReferral.deployed();
 
-  // const Contract = await ethers.getContractFactory("PlebToHill", addr1);
-  // const contract = await Contract.deploy(
-  //   "0xA63C107DE110237b64534b056b42a5dE84ED994A",
-  //   "0x09B4dd3f7F8C873e6991F78bd11ed3c5dbe37018"
-  // );
-  // await contract.deployed();
+  // console.log("Referal contract deployed at : ", plebReferral.address);
 
-  // console.log(" Pleb Contract deployed to:", await contract.address);
-
-  // const tx1 = await contract.connect(addr1).setRoundDuration(5);
-  // await tx1.wait();
-  // const tx2 = await contract.connect(addr1).setExtraDuration(1);
-  // await tx2.wait();
-  // const tx3 = await contract.connect(addr1).setThresoldTime(2);
-  // await tx3.wait();
-
-  // await addr1.sendTransaction({
-  //   to: contract.address,
-  //   value: ethers.utils.parseEther("1.0"),
-  // });
-
-  // console.log("-----------COMPLETED------------------");
-
-  const Faucet = await ethers.getContractFactory("Faucet");
-  const faucet = await Faucet.deploy(
-    "0xA63C107DE110237b64534b056b42a5dE84ED994A"
+  const Contract = await ethers.getContractFactory("PlebToHill", addr1);
+  const contract = await Contract.deploy(
+    "0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9",
+    "0x862b122B8575A1CDC8A25eb2687c9B018ae0212A",
+    "0x95744073067c298433de9dB2B8Cf0429b2E6605F"
   );
-  await faucet.deployed();
+  await contract.deployed();
 
-  console.log("Faucet contract deployed at => ", faucet.address);
+  console.log(" Pleb Contract deployed at:", await contract.address);
+
+  const tx1 = await contract.connect(addr1).setRoundDuration(5);
+  await tx1.wait();
+  const tx2 = await contract.connect(addr1).setExtraDuration(1);
+  await tx2.wait();
+  const tx3 = await contract.connect(addr1).setThresoldTime(2);
+  await tx3.wait();
+
+  await addr1.sendTransaction({
+    to: contract.address,
+    value: ethers.utils.parseEther("1.0"),
+  });
+
+  console.log("-----------COMPLETED------------------");
 }
 
 main()
@@ -59,7 +57,15 @@ main()
     process.exit(1);
   });
 
-// Pleb Token Contract deployed to: 0xA63C107DE110237b64534b056b42a5dE84ED994A
-// Pleb Staking address :0x09B4dd3f7F8C873e6991F78bd11ed3c5dbe37018
+// Pleb Token Contract deployed at: 0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9
+// Pleb Staking Contract deployed at: 0x862b122B8575A1CDC8A25eb2687c9B018ae0212A
 
-//Faucet : 0xD331327d3d248a8c6E1CAD31bc24F05F5A66F994
+// https://scan.v2b.testnet.pulsechain.com/address/0xbE012C87d2e2D3CE1402Ce9ABA4D52BFFB8db6D9#code  - token
+
+//https://scan.v2b.testnet.pulsechain.com/address/0xedA75fC53b54483084312c2efC277DD399eabebE/write-contract-referal
+
+// https://scan.v2b.testnet.pulsechain.com/address/0x862b122B8575A1CDC8A25eb2687c9B018ae0212A#code - staking
+
+// https://scan.v2b.testnet.pulsechain.com/address/0x2C082D260519371eFaa0565de44dD3c1dB3038ba#code - pleb game
+
+//Referal contract deployed at :  0x95744073067c298433de9dB2B8Cf0429b2E6605F

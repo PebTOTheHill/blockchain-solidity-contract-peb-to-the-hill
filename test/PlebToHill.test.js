@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const toWei = (num) => ethers.utils.parseEther(num.toString());
 
 describe("PlebToHill", () => {
-  let _contract, plebToken, plebStake;
+  let _contract, plebToken, plebStake, plebReferal;
   beforeEach(async () => {
     [addr1, addr2, addr3] = await ethers.getSigners();
 
@@ -13,8 +13,15 @@ describe("PlebToHill", () => {
     const PlebStake = await ethers.getContractFactory("PlebStaking");
     plebStake = await PlebStake.deploy(plebToken.address);
 
+    const PlebReferral = await ethers.getContractFactory("PlebReferral");
+    plebReferal = await PlebReferral.deploy(plebToken.address);
+
     const contract = await ethers.getContractFactory("PlebToHill", addr1);
-    _contract = await contract.deploy(plebToken.address, plebStake.address);
+    _contract = await contract.deploy(
+      plebToken.address,
+      plebStake.address,
+      plebReferal.address
+    );
     await _contract.deployed();
 
     await _contract.connect(addr1).setRoundDuration(10);
@@ -22,6 +29,7 @@ describe("PlebToHill", () => {
     await _contract.connect(addr1).setThresoldTime(2);
 
     await _contract.connect(addr1).setPothWallet(addr3.address);
+    await plebReferal.connect(addr1).setPlebContract(_contract.address);
   });
 
   it("Should not create a round when contract balance is less than 1 tPLS", async () => {
